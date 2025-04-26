@@ -1,0 +1,148 @@
+/* Background with a gradient */
+
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #ff6a00, #ee0979);
+    padding: 20px;
+}
+
+
+/* Card Styling */
+
+.signup-card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+
+/* Title */
+
+.signup-title {
+    color: #ff416c;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+
+/* Input Fields */
+
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    color: #333;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.signup-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    color: black;
+    font-size: 16px;
+    transition: 0.3s;
+    outline: none;
+}
+
+.signup-input:focus {
+    border-color: #ff416c;
+    box-shadow: 0px 0px 8px rgba(255, 65, 108, 0.5);
+}
+
+
+/* Neon Signup Button */
+
+.neon-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(90deg, #ff416c, #ff4b2b);
+    box-shadow: 0px 4px 15px rgba(255, 65, 108, 0.5);
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.neon-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 0px 15px rgba(255, 65, 108, 1);
+}
+
+
+/* Transparent Login Button */
+
+.ghost-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff416c;
+    border: 2px solid #ff416c;
+    background: transparent;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.ghost-btn:hover {
+    background: #ff416c;
+    color: white;
+    transform: scale(1.05);
+}
+
+
+/* 🔥 Mobile Optimization */
+
+@media screen and (max-width: 768px) {
+    .signup-card {
+        max-width: 90%;
+        padding: 20px;
+    }
+    .signup-title {
+        font-size: 20px;
+    }
+    .signup-input {
+        font-size: 14px;
+        padding: 10px;
+    }
+    .neon-btn,
+    .ghost-btn {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .signup-card {
+        max-width: 100%;
+        padding: 15px;
+    }
+    .signup-title {
+        font-size: 18px;
+    }
+    .signup-input {
+        font-size: 14px;
+    }
+    .neon-btn,
+    .ghost-btn {
+        font-size: 14px;
+        padding: 10px;
+    }
+}

@@ -1,0 +1,181 @@
+/* 🌟 Light Yellow Themed Wide & Responsive 3D Carousel */
+
+.carousel-container {
+  max-width: 1200px;
+  margin: auto;
+  text-align: center;
+  padding: 30px;
+  border-radius: 20px;
+  background: linear-gradient(to bottom, #fffacd, #ffeb99);
+  /* Light Yellow Gradient */
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.5s ease-in-out;
+}
+
+@media (max-width: 1024px) {
+  .carousel-container {
+      max-width: 90%;
+      padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-container {
+      max-width: 95%;
+      padding: 15px;
+  }
+}
+
+
+/* 🔍 3D Animated Search Bar */
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px auto;
+  max-width: 900px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s ease-in-out;
+}
+
+@media (max-width: 600px) {
+  .search-wrapper {
+      flex-direction: column;
+      max-width: 100%;
+      padding: 10px;
+  }
+}
+
+
+/* 🔠 Glassmorphism Input Field */
+
+.search-bar {
+  flex: 1;
+  padding: 14px 18px;
+  font-size: 18px;
+  border-radius: 30px;
+  border: 2px solid #ffd700;
+  outline: none;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease-in-out;
+}
+
+.search-bar:focus {
+  border-color: #ffcc00;
+  box-shadow: 0px 5px 12px rgba(255, 204, 0, 0.5);
+}
+
+@media (max-width: 900px) {
+  .search-bar {
+      width: 90vw;
+      font-size: 16px;
+  }
+}
+
+
+/* 🔘 Sexy Gradient Search Button */
+
+.search-button {
+  background: linear-gradient(135deg, #ffcc00, #ffa500);
+  color: white;
+  border: none;
+  padding: 14px 22px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.search-button:hover {
+  background: linear-gradient(135deg, #ffa500, #ff8c00);
+  transform: scale(1.08);
+}
+
+.search-button:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 600px) {
+  .search-button {
+      width: 100%;
+      font-size: 16px;
+  }
+}
+
+
+/* 🎠 Stunning 3D Carousel */
+
+.custom-carousel {
+  width: 100%;
+  max-width: 1100px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease-in-out;
+}
+
+@media (max-width: 768px) {
+  .custom-carousel {
+      max-width: 100%;
+  }
+}
+
+
+/* 🖼️ Carousel Images */
+
+.carousel-img {
+  border-radius: 15px;
+  transition: transform 0.4s ease-in-out;
+  object-fit: cover;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .carousel-img {
+      height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-img {
+      height: 250px;
+  }
+}
+
+
+/* ◀️ Premium Navigation Controls */
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(100%);
+  width: 45px;
+  height: 45px;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  opacity: 0.9;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+      width: 35px;
+      height: 35px;
+  }
+}

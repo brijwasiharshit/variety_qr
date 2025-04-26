@@ -1,0 +1,167 @@
+.kitchen-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .kitchen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .kitchen-header h1 {
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .connection-status {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .connection-status.connected {
+    background-color: #e6f7ee;
+    color: #28a745;
+  }
+  
+  .connection-status.disconnected {
+    background-color: #fce8e6;
+    color: #dc3545;
+  }
+  
+  .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .table-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .table-header:hover {
+    background-color: #e9ecef;
+  }
+  
+  .table-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .table-number {
+    font-weight: bold;
+    font-size: 16px;
+  }
+  
+  .order-count {
+    font-size: 14px;
+    color: #6c757d;
+  }
+  
+  .orders-list {
+    padding: 10px;
+  }
+  
+  .empty-orders {
+    padding: 20px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+  }
+  
+  .order-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+  }
+  
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  
+  .order-time {
+    color: #6c757d;
+  }
+  
+  .order-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+  }
+  
+  .order-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 15px;
+  }
+  
+  .item-name {
+    flex: 1;
+    font-weight: 500;
+  }
+  
+  .item-quantity {
+    width: 40px;
+    text-align: center;
+  }
+  
+  .item-price {
+    width: 60px;
+    text-align: right;
+    font-weight: bold;
+  }
+  
+  .order-actions {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .order-actions button {
+    flex: 1;
+    padding: 5px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .order-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .order-actions button.active {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .order-actions button:not(:disabled):hover {
+    opacity: 0.8;
+  }

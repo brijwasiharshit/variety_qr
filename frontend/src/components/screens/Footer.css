@@ -1,0 +1,76 @@
+.footer-container {
+    background-color: #98FF98;
+    /* Mint Green */
+    color: #222;
+    padding: 40px 0;
+    text-align: center;
+    font-family: "Poppins", sans-serif;
+    border-top: 4px solid #2ecc71;
+}
+
+.footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 30px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 250px;
+}
+
+.brand-name {
+    font-size: 28px;
+    font-weight: bold;
+    color: #2ecc71;
+}
+
+.tagline {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.footer-section h4 {
+    font-size: 18px;
+    margin-bottom: 12px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin: 6px 0;
+}
+
+.footer-section ul li a {
+    color: #222;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #2ecc71;
+}
+
+.social-icons a {
+    font-size: 22px;
+    margin: 0 10px;
+    color: #222;
+    transition: 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: #2ecc71;
+}
+
+.footer-bottom {
+    background: #2ecc71;
+    color: white;
+    padding: 10px;
+    margin-top: 20px;
+}
