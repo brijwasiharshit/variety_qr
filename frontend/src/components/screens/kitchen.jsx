@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronDown, ChevronUp, Clock, CookingPot, Utensils } from 'lucide-react';
 import './kitchen.css';
+import io from 'socket.io-client';
 
 const KitchenDashboard = () => {
   const [orders, setOrders] = useState({});
   const [expandedTables, setExpandedTables] = useState({});
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const host = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -20,11 +22,44 @@ const KitchenDashboard = () => {
     const token = cookies.token;
     const role = cookies.role;
     
-    
     if (!token || role !== 'Kitchen') {
       navigate('/login');
     }
   }, [navigate]);
+
+  // Set up socket connection to listen for new orders
+  useEffect(() => {
+    const socket = io(host);
+
+    socket.on('newOrder', (newOrder) => {
+      setOrders((prevOrders) => {
+        const updatedOrders = { ...prevOrders };
+        const tableNo = newOrder.tableNo;
+
+        if (!updatedOrders[tableNo]) {
+          updatedOrders[tableNo] = [];
+        }
+
+        updatedOrders[tableNo].push(newOrder);
+        return updatedOrders;
+      });
+
+      // Show notification
+      setNotifications((prevNotifications) => [
+        ...prevNotifications,
+        { message: `New order placed at Table ${newOrder.tableNo}`, id: Date.now() },
+      ]);
+
+      // Remove notification after 5 seconds
+      setTimeout(() => {
+        setNotifications((prevNotifications) =>
+          prevNotifications.filter((notif) => notif.id !== newOrder.id)
+        );
+      }, 5000);
+    });
+
+    return () => socket.disconnect();
+  }, [host]);
 
   // Fetch orders
   useEffect(() => {
@@ -103,6 +138,15 @@ const KitchenDashboard = () => {
 
   return (
     <div className="kitchen-container">
+      {/* Notification System */}
+      <div className="notifications">
+        {notifications.map((notif) => (
+          <div key={notif.id} className="notification">
+            <span>{notif.message}</span>
+          </div>
+        ))}
+      </div>
+
       <header className="kitchen-header">
         <h1>Kitchen Dashboard</h1>
       </header>
@@ -182,4 +226,3 @@ const KitchenDashboard = () => {
 };
 
 export default KitchenDashboard;
- 

@@ -3,8 +3,12 @@ import Carousel from "../Carousal";
 import Footer from "../Footer";
 import { FaArrowUp } from "react-icons/fa";
 import "./home.css";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 
 export default function Home() {
+    const params = useParams();
+    const tableId = params.tableId;
     const host = process.env.REACT_APP_HOST;
     const [foodCat, setFoodCat] = useState([]);
     const [foodItems, setFoodItems] = useState([]);
@@ -25,7 +29,7 @@ export default function Home() {
                 setError(null);
                 
                 const response = await fetch(`${host}/api/user/foodData`);
-                const table = await fetch(`${host}/api/user/fetchTables`);
+                const table = await fetch(`${host}/api/user/fetchTables`)   ;
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -120,27 +124,33 @@ export default function Home() {
         return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
     };
 
-    const handleCheckout = () => {
-        if (!selectedTable) {
-            alert("Please select a table before checkout");
-            return;
+    const handleCheckout = async () => {
+        try {
+          const promises = cart.map((item) =>
+            axios.post(`${host}/api/user/placeOrder`, {
+              itemId: item._id,
+              quantity: item.quantity,
+              portion: item.option,
+              tableNo: parseInt(tableId), 
+              status: "created",
+            })
+          );
+      
+          const results = await Promise.all(promises);
+      
+          console.log("All orders placed successfully:", results);
+      
+          alert(`Order placed successfully for Table ${tableId}! Total: ₹${calculateTotal()}`);
+      
+        
+          setCart([]);
+          setShowCart(false);
+      
+        } catch (error) {
+          console.error("Error placing order:", error.response?.data?.error || error.message);
+          alert(`Failed to place order: ${error.response?.data?.error || error.message}`);
         }
-        
-        // Here you would typically send the order to your backend
-        const order = {
-            table: selectedTable,
-            items: cart,
-            total: calculateTotal(),
-            timestamp: new Date().toISOString()
-        };
-        
-        console.log("Order submitted:", order);
-        alert(`Order placed for ${selectedTable}! Total: ₹${calculateTotal()}`);
-        
-        // Clear cart after successful checkout
-        setCart([]);
-        setShowCart(false);
-    };
+      };
 
     const filteredItems = foodItems.filter(item => 
         item?.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -286,7 +296,7 @@ export default function Home() {
                                             className="checkout-btn"
                                             onClick={handleCheckout}
                                         >
-                                            Proceed to Checkout
+                                            Place Order
                                         </button>
                                     </>
                                 )}

@@ -39,8 +39,7 @@ function App() {
           <div className={`app-container ${darkMode ? "dark-mode" : "light-mode"}`}>
             <ConditionalNavbar toggleDarkMode={toggleDarkMode} darkMode={darkMode} />
             
-            {/* Floating Cart Button - Rendered outside Routes */}
-            <FloatingCartButton />
+          
             
             {/* Page Animations */}
             <div className="page-transition">
@@ -68,21 +67,6 @@ function App() {
 }
 
 // Floating Cart Button Component
-function FloatingCartButton() {
-  const navigate = useNavigate();
-  const cart = useCart();
-  const itemCount = cart.length;
-
-  return (
-    <button 
-      className="floating-cart-btn"
-      onClick={() => navigate('/cart')}
-    >
-      <FaShoppingCart className="cart-icon" />
-      {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
-    </button>
-  );
-}
 
 // ✅ Function to conditionally render Navbar
 function ConditionalNavbar({ toggleDarkMode, darkMode }) {

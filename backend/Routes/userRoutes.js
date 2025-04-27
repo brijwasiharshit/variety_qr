@@ -69,6 +69,7 @@ router.get("/fetchTables", async (req, res) => {
 
 router.post("/placeOrder", async (req, res) => {
   try {
+    console.log(req.body);
     const { itemId, quantity, portion, tableNo, status } = req.body;
 
     if (!itemId || !quantity || !tableNo || !status || !portion) {
@@ -116,19 +117,21 @@ router.post("/placeOrder", async (req, res) => {
     });
 
     await ordered_item.save();
+    const io = req.app.get('io');
+    io.emit('newOrder', {
+      _id: ordered_item._id,
+      itemId: ordered_item.itemId,
+      tableNo: ordered_item.tableNo,
+      portion: ordered_item.portion,
+      quantity: ordered_item.quantity,
+      totalPrice: ordered_item.totalPrice,
+      createdAt: ordered_item.createdAt,
+      status: ordered_item.status,
+    });
     res.status(201).json({
       success: true,
-      message: "Order placed successfully!",
-      order: {
-        _id: ordered_item._id,
-        itemId: ordered_item.itemId,
-        quantity: ordered_item.quantity,
-        tableNo: ordered_item.tableNo,
-        portion: ordered_item.portion,
-        totalPrice: ordered_item.totalPrice,
-        createdAt: ordered_item.createdAt,
-        status: ordered_item.status,
-      },
+      message: "Order placed and kitchen notified!",
+      order: ordered_item,
     });
   } catch (err) {
     console.error("❌ Error placing order:", err);

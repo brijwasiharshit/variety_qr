@@ -1,4 +1,17 @@
 /* 🌟 Light Yellow Themed Wide & Responsive 3D Carousel */
+.custom-carousel {
+  height: 800px; /* or whatever fixed height you prefer */
+  overflow: hidden;
+  width: 100%;
+  border-radius: 10px;
+  position: relative;
+}
+
+.carousel-img {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
 
 .carousel-container {
   max-width: 1200px;
