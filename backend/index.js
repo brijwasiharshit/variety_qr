@@ -31,10 +31,10 @@ io.on('connection', (socket) => {
   });
 });
 
-// Make io accessible inside routes/controllers
+
 app.set('io', io);
 
-// 🌐 Middleware
+
 const corsOptions = {
   origin: 'http://localhost:3000',  // your frontend URL
   credentials: true,

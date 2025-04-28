@@ -33,9 +33,8 @@ const Analytics = () => {
   const [salesData, setSalesData] = useState(null);
   const [error, setError] = useState(null);
 
-  // Fetch data from backend
   useEffect(() => {
-    const checkAndFetchData = async () => {
+    const fetchData = async () => {
       const cookies = document.cookie.split(';').reduce((acc, cookie) => {
         const [name, value] = cookie.trim().split('=');
         acc[name] = value;
@@ -47,32 +46,45 @@ const Analytics = () => {
   
       if (!token || role !== 'Admin') {
         navigate('/login');
-        return; // ⛔ Stop here if not authorized
+        return;
       }
   
       try {
-        const response = await axios.get(`${host}/api/admin/analytics`, {
-          withCredentials: true
+        // Fetch each metric individually
+        const [salesTodayRes, weeklySalesRes, totalOrdersRes, avgOrderValueRes] = await Promise.all([
+          axios.get(`${host}/api/admin/salesToday`, { withCredentials: true }),
+          axios.get(`${host}/api/admin/weeklySales`, { withCredentials: true }),
+          axios.get(`${host}/api/admin/totalOrders`, { withCredentials: true }),
+          axios.get(`${host}/api/admin/avgOrderValue`, { withCredentials: true }),
+        ]);
+
+        // For sales trend chart (we will fetch it when your `/oneWeekComparison` route is ready)
+        // Now assuming you have a static sample for now
+
+        const sampleDates = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const sampleDailySales = [1000, 1500, 1200, 2000, 1800, 2200, 2500];
+
+        setSalesData({
+          todaySales: salesTodayRes.data.totalSalesToday,
+          weeklySales: weeklySalesRes.data.totalSalesWeekly,
+          totalOrders: totalOrdersRes.data.totalOrders,
+          avgOrderValue: avgOrderValueRes.data.avgOrderValue,
+          dates: sampleDates,
+          dailySales: sampleDailySales
         });
-        
-        setSalesData(response.data);
-        console.log(response.data);
+
         setError(null);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load analytics data");
-        // Fallback to sample data
-        
       } finally {
         setIsLoading(false);
       }
     };
-  
-    checkAndFetchData();
-  }, [navigate, host]);
-  
 
-  // Chart configuration
+    fetchData();
+  }, [navigate, host]);
+
   const chartData = {
     labels: salesData?.dates || [],
     datasets: [{
@@ -99,7 +111,6 @@ const Analytics = () => {
     return (
       <div className="container-fluid py-4">
         <div className="alert alert-danger">{error}</div>
-        <div className="alert alert-info">Showing sample data</div>
       </div>
     );
   }
@@ -123,7 +134,7 @@ const Analytics = () => {
               <div className="d-flex justify-content-between">
                 <div>
                   <h6 className="text-muted mb-2">Today's Sales</h6>
-                  <h3 className="mb-0">₹{(salesData?.dailySales[salesData.dailySales.length - 1] || 0).toLocaleString()}</h3>
+                  <h3 className="mb-0">₹{(salesData?.todaySales || 0).toLocaleString()}</h3>
                 </div>
                 <div className="bg-primary bg-opacity-10 p-3 rounded">
                   <i className="bi bi-currency-rupee text-primary fs-4"></i>
@@ -195,9 +206,7 @@ const Analytics = () => {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                      legend: {
-                        position: 'top',
-                      },
+                      legend: { position: 'top' },
                       tooltip: {
                         mode: 'index',
                         intersect: false,
@@ -211,9 +220,7 @@ const Analytics = () => {
                     scales: {
                       y: {
                         beginAtZero: false,
-                        grid: {
-                          drawBorder: false
-                        },
+                        grid: { drawBorder: false },
                         ticks: {
                           callback: function(value) {
                             return `₹${value.toLocaleString()}`;
@@ -221,9 +228,7 @@ const Analytics = () => {
                         }
                       },
                       x: {
-                        grid: {
-                          display: false
-                        }
+                        grid: { display: false }
                       }
                     }
                   }}
@@ -233,25 +238,6 @@ const Analytics = () => {
           </div>
         </div>
       </div>
-
-      {/* Simple CSS */}
-      <style jsx>{`
-        .card {
-          transition: transform 0.2s;
-          border-radius: 10px;
-        }
-        .card:hover {
-          transform: translateY(-3px);
-        }
-        h3 {
-          font-weight: 700;
-        }
-        @media (max-width: 768px) {
-          .col-md-3 {
-            margin-bottom: 15px;
-          }
-        }
-      `}</style>
     </div>
   );
 };

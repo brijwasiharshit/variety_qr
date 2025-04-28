@@ -49,8 +49,37 @@ kitchenRouter.post("/sendBill",(req,res) => {
     // const {number} = req.body;
     //sends the bill by twilio to the number
 })
-kitchenRouter.post("/clearTable/:tableId",(req,res) => {
-    //deletes all orders of table
-})
+kitchenRouter.post("/clearTable/:tableId", async (req, res) => {
+  const { tableId } = req.params; 
+
+  try {
+    
+      const orders = await OrderItem.updateMany(
+          { tableNo: tableId, status: { $ne: "delivered" } }, 
+          { status: "delivered" }  
+      );
+
+      // Check if any orders were updated
+      if (orders.modifiedCount === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "No orders found for this table or all orders are already delivered"
+          });
+      }
+
+      res.status(200).json({
+          success: true,
+          message: `All orders for table ${tableId} have been marked as delivered`
+      });
+  } catch (err) {
+      console.error("Error clearing table:", err);
+      res.status(500).json({
+          success: false,
+          error: "Failed to clear table",
+          details: err.message
+      });
+  }
+});
+
 
 module.exports = kitchenRouter;

@@ -22,6 +22,23 @@ export default function Home() {
     const [tables,setTables] = useState(null);
     const [notification, setNotification] = useState({ show: false, message: "" });
 
+    const saveImageToGallery = (imageUrl, fileName) => {
+        // Create a temporary anchor element
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        
+        // Set the download attribute with a proper file name and extension
+        link.download = fileName || 'downloaded-image.jpg';
+        
+        // Append to the document
+        document.body.appendChild(link);
+        
+        // Trigger the download
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+    };
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -239,70 +256,85 @@ export default function Home() {
                     </button>
 
                     {/* Cart Modal */}
-                    {showCart && (
-                        <div className="cart-modal">
-                            <div className="cart-content">
-                                <div className="cart-header">
-                                    <h2>Your Order</h2>
+                   {/* Cart Modal */}
+{showCart && (
+    <div className="cart-modal">
+        <div className="cart-content">
+            <div className="cart-header">
+                <h2>Your Order</h2>
+                <button 
+                    className="close-cart"
+                    onClick={() => setShowCart(false)}
+                >
+                    ×
+                </button>
+            </div>
+            
+            {cart.length === 0 ? (
+                <p className="empty-cart-message">Your cart is empty</p>
+            ) : (
+                <>
+                    <div className="cart-items">
+                        {cart.map((item, index) => (
+                            <div key={`${item._id}-${item.option}-${index}`} className="cart-item">
+                                <div className="cart-item-info">
+                                    <h4>{item.name} ({item.option})</h4>
+                                    <p>₹{item.price} × {item.quantity}</p>
+                                    {/* Display the image if available */}
+                                    {item.image && (
+                                        <div className="item-image-container">
+                                            <img 
+                                                src={item.image} 
+                                                alt={item.name} 
+                                                className="cart-item-image"
+                                            />
+                                            <button 
+                                                onClick={() => saveImageToGallery(item.image, item.name)}
+                                                className="save-image-btn"
+                                            >
+                                                Save Photo
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="cart-item-actions">
                                     <button 
-                                        className="close-cart"
-                                        onClick={() => setShowCart(false)}
+                                        onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
+                                        className="quantity-btn"
                                     >
-                                        ×
+                                        -
+                                    </button>
+                                    <span>{item.quantity}</span>
+                                    <button 
+                                        onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
+                                        className="quantity-btn"
+                                    >
+                                        +
+                                    </button>
+                                    <button 
+                                        onClick={() => removeFromCart(item._id, item.option)}
+                                        className="remove-btn"
+                                    >
+                                        Remove
                                     </button>
                                 </div>
-                                
-                                {cart.length === 0 ? (
-                                    <p className="empty-cart-message">Your cart is empty</p>
-                                ) : (
-                                    <>
-                           
-
-                                        <div className="cart-items">
-                                            {cart.map((item, index) => (
-                                                <div key={`${item._id}-${item.option}-${index}`} className="cart-item">
-                                                    <div className="cart-item-info">
-                                                        <h4>{item.name} ({item.option})</h4>
-                                                        <p>₹{item.price} × {item.quantity}</p>
-                                                    </div>
-                                                    <div className="cart-item-actions">
-                                                        <button 
-                                                            onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
-                                                            className="quantity-btn"
-                                                        >
-                                                            -
-                                                        </button>
-                                                        <span>{item.quantity}</span>
-                                                        <button 
-                                                            onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
-                                                            className="quantity-btn"
-                                                        >
-                                                            +
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => removeFromCart(item._id, item.option)}
-                                                            className="remove-btn"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div className="cart-total">
-                                            <h3>Total: ₹{calculateTotal()}</h3>
-                                        </div>
-                                        <button 
-                                            className="checkout-btn"
-                                            onClick={handleCheckout}
-                                        >
-                                            Place Order
-                                        </button>
-                                    </>
-                                )}
                             </div>
-                        </div>
-                    )}
+                        ))}
+                    </div>
+                    <div className="cart-total">
+                        <h3>Total: ₹{calculateTotal()}</h3>
+                    </div>
+                    <button 
+                        className="checkout-btn"
+                        onClick={handleCheckout}
+                    >
+                        Place Order
+                    </button>
+                </>
+            )}
+        </div>
+    </div>
+)}
                     
                     <Footer />
                 </>

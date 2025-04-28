@@ -6,131 +6,115 @@ const adminAuth = require('../middleware/admin');
 adminRouter.use(adminAuth);
 // Get sales analytics
 
-adminRouter.get("/analytics", async (req, res) => {
-    try {
-      // Get dates for the last 7 days
-      const dates = [];
-      const dailySales = [];
-      const dailyOrders = [];
-      
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        dates.push(formattedDate);
-        
-        // Start and end of day
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-        
-        // Only include delivered orders
-        const dailyData = await Order.aggregate([
-          { 
-            $match: { 
-              createdAt: { $gte: startOfDay, $lte: endOfDay },
-              status: 'delivered' // Only delivered orders
-            } 
-          },
-          {
-            $group: {
-              _id: null,
-              totalSales: { $sum: { $multiply: ["$quantity", "$price"] } },
-              orderCount: { $sum: 1 }
-            }
-          }
-        ]);
-        
-        dailySales.push(dailyData[0]?.totalSales || 0);
-        dailyOrders.push(dailyData[0]?.orderCount || 0);
+const getTodayStart = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
+// Utility to calculate 7 days ago
+const getSevenDaysAgo = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 7);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+adminRouter.get("/salesToday", async (req, res) => {
+  try {
+    const todayStart = getTodayStart();
+    const orders = await Order.find({
+      status: "delivered",
+      createdAt: { $gte: todayStart }
+    }).lean();
+
+
+    let totalSales = 0;
+
+    for (const order of orders) {
+      const foodItem = await FoodItem.findById(order.itemId).lean();
+      if (foodItem && foodItem.options[order.portion]) {
+        totalSales += foodItem.options[order.portion] * order.quantity;
       }
-      
-      // Weekly totals (only delivered orders)
-      const weeklyStart = new Date();
-      weeklyStart.setDate(weeklyStart.getDate() - 6);
-      weeklyStart.setHours(0, 0, 0, 0);
-      
-      const weeklyData = await Order.aggregate([
-        { 
-          $match: { 
-            createdAt: { $gte: weeklyStart },
-            status: 'delivered' // Only delivered orders
-          } 
-        },
-        {
-          $group: {
-            _id: null,
-            totalSales: { $sum: { $multiply: ["$quantity", "$price"] } },
-            orderCount: { $sum: 1 },
-            avgOrderValue: { $avg: { $multiply: ["$quantity", "$price"] } }
-          }
-        }
-      ]);
-      
-      // Today's data (only delivered orders)
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      
-      const todayData = await Order.aggregate([
-        { 
-          $match: { 
-            createdAt: { $gte: todayStart },
-            status: 'delivered' // Only delivered orders
-          } 
-        },
-        {
-          $group: {
-            _id: null,
-            totalSales: { $sum: { $multiply: ["$quantity", "$price"] } }
-          }
-        }
-      ]);
-      
-      // Top selling items (only delivered orders)
-      const topItems = await Order.aggregate([
-        { $match: { status: 'delivered' } }, // Only delivered orders
-        {
-          $lookup: {
-            from: "food_items",
-            localField: "itemId",
-            foreignField: "_id",
-            as: "foodItem"
-          }
-        },
-        { $unwind: "$foodItem" },
-        {
-          $group: {
-            _id: "$foodItem.name",
-            totalQuantity: { $sum: "$quantity" },
-            totalRevenue: { $sum: { $multiply: ["$quantity", "$price"] } }
-          }
-        },
-        { $sort: { totalQuantity: -1 } },
-        { $limit: 5 }
-      ]);
-      
-      res.json({
-        success: true,
-        dates,
-        dailySales,
-        dailyOrders,
-        weeklySales: weeklyData[0]?.totalSales || 0,
-        totalOrders: weeklyData[0]?.orderCount || 0,
-        avgOrderValue: weeklyData[0]?.avgOrderValue || 0,
-        todaySales: todayData[0]?.totalSales || 0,
-        topItems: topItems || []
-      });
-      
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Failed to fetch analytics data",
-        error: error.message
-      });
     }
+
+    res.json({ success: true, totalSalesToday: totalSales });
+  } catch (err) {
+    console.error("Error in salesToday:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
+adminRouter.get("/weeklySales", async (req, res) => {
+  try {
+    const last7Days = getSevenDaysAgo();
+    const orders = await Order.find({
+      status: "delivered",
+      createdAt: { $gte: last7Days }
+    }).lean();
+
+    let totalSales = 0;
+
+    for (const order of orders) {
+      const foodItem = await FoodItem.findById(order.itemId).lean();
+      if (foodItem && foodItem.options[order.portion]) {
+        totalSales += foodItem.options[order.portion] * order.quantity;
+      }
+    }
+
+    res.json({ success: true, totalSalesWeekly: totalSales });
+  } catch (err) {
+    console.error("Error in weeklySales:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// TOTAL ORDERS
+adminRouter.get("/totalOrders", async (req, res) => {
+  try {
+    const totalOrders = await Order.countDocuments({ status: "delivered" });
+
+    res.json({ success: true, totalOrders });
+  } catch (err) {
+    console.error("Error in totalOrders:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// AVERAGE ORDER VALUE
+adminRouter.get("/avgOrderValue", async (req, res) => {
+  try {
+    const orders = await Order.find({
+      status: "delivered"
+    }).lean();
+
+    const tableWiseTotals = {}; // { tableNo: totalPrice }
+
+    for (const order of orders) {
+      const foodItem = await FoodItem.findById(order.itemId).lean();
+      if (foodItem && foodItem.options[order.portion]) {
+        const price = foodItem.options[order.portion] * order.quantity;
+        if (tableWiseTotals[order.tableNo]) {
+          tableWiseTotals[order.tableNo] += price;
+        } else {
+          tableWiseTotals[order.tableNo] = price;
+        }
+      }
+    }
+
+    const totalRevenue = Object.values(tableWiseTotals).reduce((a, b) => a + b, 0);
+    const numberOfTables = Object.keys(tableWiseTotals).length;
+    const avgOrderValue = numberOfTables > 0 ? (totalRevenue / numberOfTables) : 0;
+
+    res.json({ success: true, avgOrderValue });
+  } catch (err) {
+    console.error("Error in avgOrderValue:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+adminRouter.get("/oneWeekComparison",(req,res) => {
+
+})
+
 
 adminRouter.post("/toggleAvl", async (req, res) => {
     try {
@@ -179,8 +163,13 @@ adminRouter.post("/toggleAvl", async (req, res) => {
 
 adminRouter.post("/addfooditem", async(req, res) => {
     try {
+   
         const { name, description, options, category, imageUrl } = req.body;
-
+      console.log(name);
+      console.log(description);
+      console.log(options);
+      console.log(category);
+      console.log(imageUrl);
         // Validate required fields
         if (!name || !options || !category) {
             return res.status(400).json({

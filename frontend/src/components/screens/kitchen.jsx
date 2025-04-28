@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronDown, ChevronUp, Clock, CookingPot, Utensils } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Clock, CookingPot, Utensils, Trash2 } from 'lucide-react';
 import './kitchen.css';
 import io from 'socket.io-client';
 
@@ -18,7 +18,7 @@ const KitchenDashboard = () => {
       acc[name] = value;
       return acc;
     }, {});
-  
+
     const token = cookies.token;
     const role = cookies.role;
     
@@ -44,16 +44,17 @@ const KitchenDashboard = () => {
         return updatedOrders;
       });
 
-      // Show notification
+      // Show notification with unique ID
+      const notificationId = Date.now();
       setNotifications((prevNotifications) => [
         ...prevNotifications,
-        { message: `New order placed at Table ${newOrder.tableNo}`, id: Date.now() },
+        { message: `New order placed at Table ${newOrder.tableNo}`, id: notificationId },
       ]);
 
       // Remove notification after 5 seconds
       setTimeout(() => {
         setNotifications((prevNotifications) =>
-          prevNotifications.filter((notif) => notif.id !== newOrder.id)
+          prevNotifications.filter((notif) => notif.id !== notificationId)
         );
       }, 5000);
     });
@@ -117,6 +118,77 @@ const KitchenDashboard = () => {
     }
   };
 
+  const clearTable = async (tableNumber) => {
+    try {
+      const response = await fetch(`${host}/api/kitchen/clearTable/${tableNumber}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        // Update local state to remove the cleared table
+        setOrders(prevOrders => {
+          const newOrders = {...prevOrders};
+          delete newOrders[tableNumber];
+          return newOrders;
+        });
+        
+        // Show success notification
+        const notificationId = Date.now();
+        setNotifications((prevNotifications) => [
+          ...prevNotifications,
+          { 
+            message: `Table ${tableNumber} cleared successfully`, 
+            id: notificationId, 
+            type: 'success' 
+          },
+        ]);
+        
+        setTimeout(() => {
+          setNotifications((prevNotifications) =>
+            prevNotifications.filter((notif) => notif.id !== notificationId)
+          );
+        }, 5000);
+      } else {
+        // Show error notification
+        const notificationId = Date.now();
+        setNotifications((prevNotifications) => [
+          ...prevNotifications,
+          { 
+            message: `Failed to clear Table ${tableNumber}: ${data.error}`, 
+            id: notificationId, 
+            type: 'error' 
+          },
+        ]);
+        
+        setTimeout(() => {
+          setNotifications((prevNotifications) =>
+            prevNotifications.filter((notif) => notif.id !== notificationId)
+          );
+        }, 5000);
+      }
+    } catch (err) {
+      console.error("Error clearing table:", err);
+      // Show error notification
+      const notificationId = Date.now();
+      setNotifications((prevNotifications) => [
+        ...prevNotifications,
+        { 
+          message: `Error clearing Table ${tableNumber}`, 
+          id: notificationId, 
+          type: 'error' 
+        },
+      ]);
+      
+      setTimeout(() => {
+        setNotifications((prevNotifications) =>
+          prevNotifications.filter((notif) => notif.id !== notificationId)
+        );
+      }, 5000);
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'created':
@@ -141,7 +213,7 @@ const KitchenDashboard = () => {
       {/* Notification System */}
       <div className="notifications">
         {notifications.map((notif) => (
-          <div key={notif.id} className="notification">
+          <div key={notif.id} className={`notification ${notif.type || ''}`}>
             <span>{notif.message}</span>
           </div>
         ))}
@@ -164,7 +236,21 @@ const KitchenDashboard = () => {
                   {orders[tableNumber].length} {orders[tableNumber].length === 1 ? 'order' : 'orders'}
                 </span>
               </div>
-              {expandedTables[tableNumber] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              <div className="table-actions">
+                <button 
+                  className="clear-table-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Are you sure you want to clear Table ${tableNumber}?`)) {
+                      clearTable(tableNumber);
+                    }
+                  }}
+                  title="Clear Table"
+                >
+                  <Trash2 size={18} />
+                </button>
+                {expandedTables[tableNumber] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </div>
             </div>
 
             {expandedTables[tableNumber] && (
@@ -192,23 +278,30 @@ const KitchenDashboard = () => {
 
                       <div className="order-actions">
                         <button
+                          className={`status-btn ${order.status === 'created' ? 'active' : ''}`}
+                          onClick={() => updateOrderStatus(order._id, 'created')}
+                          disabled={order.status === 'created'}
+                        >
+                          Created
+                        </button>
+                        <button
+                          className={`status-btn ${order.status === 'preparing' ? 'active' : ''}`}
                           onClick={() => updateOrderStatus(order._id, 'preparing')}
-                          disabled={order.status !== 'created'}
-                          className={order.status === 'created' ? 'active' : ''}
+                          disabled={order.status === 'preparing'}
                         >
                           Preparing
                         </button>
                         <button
+                          className={`status-btn ${order.status === 'ready' ? 'active' : ''}`}
                           onClick={() => updateOrderStatus(order._id, 'ready')}
-                          disabled={order.status !== 'preparing'}
-                          className={order.status === 'preparing' ? 'active' : ''}
+                          disabled={order.status === 'ready'}
                         >
                           Ready
                         </button>
                         <button
+                          className={`status-btn ${order.status === 'served' ? 'active' : ''}`}
                           onClick={() => updateOrderStatus(order._id, 'served')}
-                          disabled={order.status !== 'ready'}
-                          className={order.status === 'ready' ? 'active' : ''}
+                          disabled={order.status === 'served'}
                         >
                           Served
                         </button>
