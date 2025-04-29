@@ -8,6 +8,9 @@ const KitchenDashboard = () => {
   const [orders, setOrders] = useState({});
   const [expandedTables, setExpandedTables] = useState({});
   const [notifications, setNotifications] = useState([]);
+  const [showClearTableModal, setShowClearTableModal] = useState(false);
+  const [tableToClear, setTableToClear] = useState(null);
+  const [verificationNumber, setVerificationNumber] = useState('');
   const navigate = useNavigate();
   const host = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -118,9 +121,25 @@ const KitchenDashboard = () => {
     }
   };
 
-  const clearTable = async (tableNumber) => {
+  const handleClearTableClick = (tableNumber) => {
+    setTableToClear(tableNumber);
+    setShowClearTableModal(true);
+    setVerificationNumber('');
+  };
+
+  const handleClearTableConfirm = async () => {
+    if (!verificationNumber) {
+      alert('Please enter the mobile to confirm');
+      return;
+    }
+
+    if (parseInt(verificationNumber) !== parseInt(tableToClear)) {
+      alert('Entered mobile does not match');
+      return;
+    }
+
     try {
-      const response = await fetch(`${host}/api/kitchen/clearTable/${tableNumber}`, {
+      const response = await fetch(`${host}/api/kitchen/clearTable/${tableToClear}`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -130,7 +149,7 @@ const KitchenDashboard = () => {
         // Update local state to remove the cleared table
         setOrders(prevOrders => {
           const newOrders = {...prevOrders};
-          delete newOrders[tableNumber];
+          delete newOrders[tableToClear];
           return newOrders;
         });
         
@@ -139,7 +158,7 @@ const KitchenDashboard = () => {
         setNotifications((prevNotifications) => [
           ...prevNotifications,
           { 
-            message: `Table ${tableNumber} cleared successfully`, 
+            message: `Table ${tableToClear} cleared successfully`, 
             id: notificationId, 
             type: 'success' 
           },
@@ -156,7 +175,7 @@ const KitchenDashboard = () => {
         setNotifications((prevNotifications) => [
           ...prevNotifications,
           { 
-            message: `Failed to clear Table ${tableNumber}: ${data.error}`, 
+            message: `Failed to clear Table ${tableToClear}: ${data.error}`, 
             id: notificationId, 
             type: 'error' 
           },
@@ -175,7 +194,7 @@ const KitchenDashboard = () => {
       setNotifications((prevNotifications) => [
         ...prevNotifications,
         { 
-          message: `Error clearing Table ${tableNumber}`, 
+          message: `Error clearing Table ${tableToClear}`, 
           id: notificationId, 
           type: 'error' 
         },
@@ -187,6 +206,10 @@ const KitchenDashboard = () => {
         );
       }, 5000);
     }
+
+    setShowClearTableModal(false);
+    setTableToClear(null);
+    setVerificationNumber('');
   };
 
   const getStatusIcon = (status) => {
@@ -210,6 +233,40 @@ const KitchenDashboard = () => {
 
   return (
     <div className="kitchen-container">
+      {/* Clear Table Confirmation Modal */}
+      {showClearTableModal && (
+        <div className="modal-overlay">
+          <div className="clear-table-modal">
+            <h3>Clear Table {tableToClear}</h3>
+            <p>To confirm, please enter the mobile number:</p>
+            <input
+              type="number"
+              value={verificationNumber}
+              onChange={(e) => setVerificationNumber(e.target.value)}
+              placeholder="Enter mobile number"
+              className="verification-input"
+            />
+            <div className="modal-actions">
+              <button 
+                onClick={() => {
+                  setShowClearTableModal(false);
+                  setTableToClear(null);
+                }}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleClearTableConfirm}
+                className="confirm-btn"
+              >
+                Confirm Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Notification System */}
       <div className="notifications">
         {notifications.map((notif) => (
@@ -241,9 +298,7 @@ const KitchenDashboard = () => {
                   className="clear-table-btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (window.confirm(`Are you sure you want to clear Table ${tableNumber}?`)) {
-                      clearTable(tableNumber);
-                    }
+                    handleClearTableClick(tableNumber);
                   }}
                   title="Clear Table"
                 >

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import html2canvas from 'html2canvas';
 import Carousel from "../Carousal";
 import Footer from "../Footer";
 import { FaArrowUp } from "react-icons/fa";
@@ -19,26 +20,52 @@ export default function Home() {
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
     const [selectedTable, setSelectedTable] = useState("");
-    const [tables,setTables] = useState(null);
+    const [tables, setTables] = useState(null);
     const [notification, setNotification] = useState({ show: false, message: "" });
 
-    const saveImageToGallery = (imageUrl, fileName) => {
-        // Create a temporary anchor element
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        
-        // Set the download attribute with a proper file name and extension
-        link.download = fileName || 'downloaded-image.jpg';
-        
-        // Append to the document
-        document.body.appendChild(link);
-        
-        // Trigger the download
-        link.click();
-        
-        // Clean up
-        document.body.removeChild(link);
+    // Function to save individual item image
+    const saveImageToGallery = (imageUrl, itemName) => {
+        try {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `${itemName || 'item'}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showNotification(`Saved image of ${itemName}`);
+        } catch (error) {
+            console.error('Error saving image:', error);
+            showNotification('Failed to save image');
+        }
     };
+
+    // Function to save entire bill as image
+    const saveBillToGallery = () => {
+        try {
+            const cartContent = document.querySelector('.cart-content');
+            
+            if (cartContent) {
+                html2canvas(cartContent, {
+                    scale: 2, // Higher quality
+                    logging: false,
+                    useCORS: true // For cross-origin images
+                }).then(canvas => {
+                    const image = canvas.toDataURL('image/png', 1.0);
+                    const link = document.createElement('a');
+                    link.href = image;
+                    link.download = `bill_table_${tableId}_${new Date().toISOString().slice(0,10)}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showNotification('Bill saved successfully!');
+                });
+            }
+        } catch (error) {
+            console.error('Error saving bill:', error);
+            showNotification('Failed to save bill');
+        }
+    };
+
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -46,7 +73,7 @@ export default function Home() {
                 setError(null);
                 
                 const response = await fetch(`${host}/api/user/foodData`);
-                const table = await fetch(`${host}/api/user/fetchTables`)   ;
+                const table = await fetch(`${host}/api/user/fetchTables`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
@@ -54,7 +81,6 @@ export default function Home() {
                 const data = await response.json();
                 const availableTables = await table.json();
                 setTables(availableTables.tables);
-                console.log(availableTables.tables);
                 
                 if (!data.foodItems || data.foodItems.length === 0) {
                     throw new Error("No food items available");
@@ -63,7 +89,6 @@ export default function Home() {
                 setFoodCat(data.foodCategories);
                 setFoodItems(data.foodItems);
                 
-
             } catch (err) {
                 console.error("Failed to fetch data:", err.message);
                 setError(err.message);
@@ -122,6 +147,7 @@ export default function Home() {
         setCart(cart.filter(item => 
             !(item._id === itemId && item.option === option)
         ));
+        showNotification('Item removed from cart');
     };
 
     const updateQuantity = (itemId, option, newQuantity) => {
@@ -143,31 +169,26 @@ export default function Home() {
 
     const handleCheckout = async () => {
         try {
-          const promises = cart.map((item) =>
-            axios.post(`${host}/api/user/placeOrder`, {
-              itemId: item._id,
-              quantity: item.quantity,
-              portion: item.option,
-              tableNo: parseInt(tableId), 
-              status: "created",
-            })
-          );
-      
-          const results = await Promise.all(promises);
-      
-          console.log("All orders placed successfully:", results);
-      
-          alert(`Order placed successfully for Table ${tableId}! Total: ₹${calculateTotal()}`);
-      
+            const promises = cart.map((item) =>
+                axios.post(`${host}/api/user/placeOrder`, {
+                    itemId: item._id,
+                    quantity: item.quantity,
+                    portion: item.option,
+                    tableNo: parseInt(tableId), 
+                    status: "created",
+                })
+            );
         
-          setCart([]);
-          setShowCart(false);
-      
+            const results = await Promise.all(promises);
+            console.log("All orders placed successfully:", results);
+            alert(`Order placed successfully for Table ${tableId}! Total: ₹${calculateTotal()}`);
+            setCart([]);
+            setShowCart(false);
         } catch (error) {
-          console.error("Error placing order:", error.response?.data?.error || error.message);
-          alert(`Failed to place order: ${error.response?.data?.error || error.message}`);
+            console.error("Error placing order:", error.response?.data?.error || error.message);
+            alert(`Failed to place order: ${error.response?.data?.error || error.message}`);
         }
-      };
+    };
 
     const filteredItems = foodItems.filter(item => 
         item?.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -185,7 +206,7 @@ export default function Home() {
             {!isLoaded ? (
                 <div className="loading-container">
                     <img
-                        src="https://i.postimg.cc/02DXQszV/Whats-App-Image-2025-03-18-at-14-40-25-1.jpg"
+                        src="https://i.postimg.cc/fLXQjdgL/Untitled-design-5.jpg"
                         alt="Variety Sweets Logo"
                         className="loading-logo"
                     />
@@ -256,94 +277,100 @@ export default function Home() {
                     </button>
 
                     {/* Cart Modal */}
-                   {/* Cart Modal */}
-{showCart && (
-    <div className="cart-modal">
-        <div className="cart-content">
-            <div className="cart-header">
-                <h2>Your Order</h2>
-                <button 
-                    className="close-cart"
-                    onClick={() => setShowCart(false)}
-                >
-                    ×
-                </button>
-            </div>
-            
-            {cart.length === 0 ? (
-                <p className="empty-cart-message">Your cart is empty</p>
-            ) : (
-                <>
-                    <div className="cart-items">
-                        {cart.map((item, index) => (
-                            <div key={`${item._id}-${item.option}-${index}`} className="cart-item">
-                                <div className="cart-item-info">
-                                    <h4>{item.name} ({item.option})</h4>
-                                    <p>₹{item.price} × {item.quantity}</p>
-                                    {/* Display the image if available */}
-                                    {item.image && (
-                                        <div className="item-image-container">
-                                            <img 
-                                                src={item.image} 
-                                                alt={item.name} 
-                                                className="cart-item-image"
-                                            />
+                    {showCart && (
+                        <div className="cart-modal">
+                            <div className="cart-content">
+                                <div className="cart-header">
+                                    <h2>Your Order</h2>
+                                    <button 
+                                        className="close-cart"
+                                        onClick={() => setShowCart(false)}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                                
+                                {cart.length === 0 ? (
+                                    <p className="empty-cart-message">Your cart is empty</p>
+                                ) : (
+                                    <>
+                                        <div className="cart-items">
+                                            {cart.map((item, index) => (
+                                                <div key={`${item._id}-${item.option}-${index}`} className="cart-item">
+                                                    <div className="cart-item-info">
+                                                        <h4>{item.name} ({item.option})</h4>
+                                                        <p>₹{item.price} × {item.quantity}</p>
+                                                        {item.image && (
+                                                            <div className="item-image-container">
+                                                                <img 
+                                                                    src={item.image} 
+                                                                    alt={item.name} 
+                                                                    className="cart-item-image"
+                                                                />
+                                                                <button 
+                                                                    onClick={() => saveImageToGallery(item.image, item.name)}
+                                                                    className="save-image-btn"
+                                                                >
+                                                                    Save Photo
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="cart-item-actions">
+                                                        <button 
+                                                            onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
+                                                            className="quantity-btn"
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <span>{item.quantity}</span>
+                                                        <button 
+                                                            onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
+                                                            className="quantity-btn"
+                                                        >
+                                                            +
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => removeFromCart(item._id, item.option)}
+                                                            className="remove-btn"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="cart-total">
+                                            <h3>Total: ₹{calculateTotal()}</h3>
+                                        </div>
+                                        <div className="cart-actions">
                                             <button 
-                                                onClick={() => saveImageToGallery(item.image, item.name)}
-                                                className="save-image-btn"
+                                                className="save-bill-btn"
+                                                onClick={saveBillToGallery}
                                             >
-                                                Save Photo
+                                                Save Bill
+                                            </button>
+                                            <button 
+                                                className="checkout-btn"
+                                                onClick={handleCheckout}
+                                            >
+                                                Place Order
                                             </button>
                                         </div>
-                                    )}
-                                </div>
-                                <div className="cart-item-actions">
-                                    <button 
-                                        onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
-                                        className="quantity-btn"
-                                    >
-                                        -
-                                    </button>
-                                    <span>{item.quantity}</span>
-                                    <button 
-                                        onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
-                                        className="quantity-btn"
-                                    >
-                                        +
-                                    </button>
-                                    <button 
-                                        onClick={() => removeFromCart(item._id, item.option)}
-                                        className="remove-btn"
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
+                                    </>
+                                )}
                             </div>
-                        ))}
-                    </div>
-                    <div className="cart-total">
-                        <h3>Total: ₹{calculateTotal()}</h3>
-                    </div>
-                    <button 
-                        className="checkout-btn"
-                        onClick={handleCheckout}
-                    >
-                        Place Order
-                    </button>
-                </>
-            )}
-        </div>
-    </div>
-)}
+                        </div>
+                    )}
                     
                     <Footer />
-                </>
-            )}
 
-            {showBackToTop && (
-                <button className="back-to-top" onClick={scrollToTop}>
-                    <FaArrowUp />
-                </button>
+                    {showBackToTop && (
+                        <button className="back-to-top" onClick={scrollToTop}>
+                            <FaArrowUp />
+                        </button>
+                    )}
+                </>
             )}
         </div>
     );
