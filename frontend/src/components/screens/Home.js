@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import html2canvas from 'html2canvas';
 import Carousel from "../Carousal";
 import Footer from "../Footer";
 import { FaArrowUp } from "react-icons/fa";
 import "./home.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Home() {
     const params = useParams();
+    const navigate = useNavigate();
     const tableId = params.tableId;
     const host = process.env.REACT_APP_HOST;
     const [foodCat, setFoodCat] = useState([]);
@@ -19,9 +20,27 @@ export default function Home() {
     const [showBackToTop, setShowBackToTop] = useState(false);
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
-    const [selectedTable, setSelectedTable] = useState("");
-    const [tables, setTables] = useState(null);
     const [notification, setNotification] = useState({ show: false, message: "" });
+    const cartRef = useRef(null);
+
+    // Calculate subtotal from cart items
+    const calculateSubtotal = () => {
+        return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    };
+
+    // Calculate total with tax (5%)
+    const calculateTotal = () => {
+        const subtotal = calculateSubtotal();
+        return subtotal + (subtotal * 0.05);
+    };
+
+    // Show notification
+    const showNotification = (message) => {
+        setNotification({ show: true, message });
+        setTimeout(() => {
+            setNotification({ show: false, message: "" });
+        }, 3000);
+    };
 
     // Function to save individual item image
     const saveImageToGallery = (imageUrl, itemName) => {
@@ -39,32 +58,183 @@ export default function Home() {
         }
     };
 
-    // Function to save entire bill as image
-    const saveBillToGallery = () => {
+    // Improved function to save receipt
+    const saveReceiptToGallery = async () => {
         try {
-            const cartContent = document.querySelector('.cart-content');
-            
-            if (cartContent) {
-                html2canvas(cartContent, {
-                    scale: 2, // Higher quality
-                    logging: false,
-                    useCORS: true // For cross-origin images
-                }).then(canvas => {
-                    const image = canvas.toDataURL('image/png', 1.0);
-                    const link = document.createElement('a');
-                    link.href = image;
-                    link.download = `bill_table_${tableId}_${new Date().toISOString().slice(0,10)}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showNotification('Bill saved successfully!');
-                });
+            if (!cartRef.current) {
+                showNotification('Could not find receipt content');
+                return;
             }
+
+            // Hide buttons before capturing
+            const buttons = cartRef.current.querySelectorAll('button');
+            buttons.forEach(btn => btn.style.visibility = 'hidden');
+
+            const canvas = await html2canvas(cartRef.current, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                scrollY: -window.scrollY
+            });
+
+            // Restore buttons visibility
+            buttons.forEach(btn => btn.style.visibility = 'visible');
+
+            // Different handling for mobile vs desktop
+            if (isMobileDevice()) {
+                await handleMobileSave(canvas);
+            } else {
+                await handleDesktopSave(canvas);
+            }
+
+            showNotification('Receipt saved successfully!');
         } catch (error) {
-            console.error('Error saving bill:', error);
-            showNotification('Failed to save bill');
+            console.error('Error saving receipt:', error);
+            showNotification('Failed to save receipt');
         }
     };
+
+    const isMobileDevice = () => {
+        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    };
+
+    const handleMobileSave = async (canvas) => {
+        const image = canvas.toDataURL('image/png');
+        
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            // iOS - open image in new tab
+            const newWindow = window.open();
+            newWindow.document.write(`<img src="${image}" />`);
+        } else {
+            // Android - download image
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = `Receipt_Table_${tableId}_${new Date().toISOString().slice(0,10)}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
+    const handleDesktopSave = async (canvas) => {
+        try {
+            // Try to copy to clipboard first
+            if (navigator.clipboard && navigator.clipboard.write) {
+                const blob = await new Promise(resolve => canvas.toBlob(resolve));
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]);
+                showNotification('Receipt copied to clipboard!');
+            } else {
+                throw new Error('Clipboard API not available');
+            }
+        } catch (err) {
+            console.log('Falling back to download:', err);
+            // Fallback to download
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = `Receipt_Table_${tableId}_${new Date().toISOString().slice(0,10)}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
+    // Add item to cart
+    const addToCart = (item, option, price) => {
+        const existingItem = cart.find(cartItem => 
+            cartItem._id === item._id && cartItem.option === option
+        );
+
+        if (existingItem) {
+            setCart(cart.map(cartItem =>
+                cartItem._id === item._id && cartItem.option === option
+                    ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                    : cartItem
+            ));
+            showNotification(`Increased quantity of ${item.name} (${option})`);
+        } else {
+            setCart([...cart, {
+                ...item,
+                option,
+                price,
+                quantity: 1
+            }]);
+            showNotification(`Added ${item.name} (${option}) to cart`);
+        }
+    };
+
+    // Remove item from cart
+    const removeFromCart = (itemId, option) => {
+        setCart(cart.filter(item => 
+            !(item._id === itemId && item.option === option)
+        ));
+        showNotification('Item removed from cart');
+    };
+
+    // Update item quantity
+    const updateQuantity = (itemId, option, newQuantity) => {
+        if (newQuantity < 1) {
+            removeFromCart(itemId, option);
+            return;
+        }
+
+        setCart(cart.map(item =>
+            item._id === itemId && item.option === option
+                ? { ...item, quantity: newQuantity }
+                : item
+        ));
+    };
+
+    // Handle checkout - Updated to navigate to last.js
+    const handleCheckout = async () => {
+        try {
+            const promises = cart.map((item) =>
+                axios.post(`${host}/api/user/placeOrder`, {
+                    itemId: item._id,
+                    quantity: item.quantity,
+                    portion: item.option,
+                    tableNo: parseInt(tableId), 
+                    status: "created",
+                })
+            );
+        
+            const results = await Promise.all(promises);
+            console.log("All orders placed successfully:", results);
+            
+            // Navigate to last.js with order details
+            navigate('/last', {
+                state: {
+                    totalAmount: calculateTotal().toFixed(2),
+                    tableId: tableId,
+                    orderDetails: cart.map(item => ({
+                        name: item.name,
+                        option: item.option,
+                        quantity: item.quantity,
+                        price: item.price
+                    }))
+                }
+            });
+            
+            // Clear cart
+            setCart([]);
+            setShowCart(false);
+        } catch (error) {
+            console.error("Error placing order:", error.response?.data?.error || error.message);
+            showNotification(`Failed to place order: ${error.response?.data?.error || error.message}`);
+        }
+    };
+
+    // Scroll to top
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    // Filter food items based on search query
+    const filteredItems = foodItems.filter(item => 
+        item?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     useEffect(() => {
         const loadData = async () => {
@@ -73,14 +243,11 @@ export default function Home() {
                 setError(null);
                 
                 const response = await fetch(`${host}/api/user/foodData`);
-                const table = await fetch(`${host}/api/user/fetchTables`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-    
+
                 const data = await response.json();
-                const availableTables = await table.json();
-                setTables(availableTables.tables);
                 
                 if (!data.foodItems || data.foodItems.length === 0) {
                     throw new Error("No food items available");
@@ -108,91 +275,6 @@ export default function Home() {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
-    const addToCart = (item, option, price) => {
-        const existingItem = cart.find(cartItem => 
-            cartItem._id === item._id && cartItem.option === option
-        );
-
-        if (existingItem) {
-            setCart(cart.map(cartItem =>
-                cartItem._id === item._id && cartItem.option === option
-                    ? { ...cartItem, quantity: cartItem.quantity + 1 }
-                    : cartItem
-            ));
-            showNotification(`Increased quantity of ${item.name} (${option})`);
-        } else {
-            setCart([...cart, {
-                ...item,
-                option,
-                price,
-                quantity: 1
-            }]);
-            showNotification(`Added ${item.name} (${option}) to cart`);
-        }
-    };
-
-    const showNotification = (message) => {
-        setNotification({ show: true, message });
-        setTimeout(() => {
-            setNotification({ show: false, message: "" });
-        }, 3000);
-    };
-
-    const removeFromCart = (itemId, option) => {
-        setCart(cart.filter(item => 
-            !(item._id === itemId && item.option === option)
-        ));
-        showNotification('Item removed from cart');
-    };
-
-    const updateQuantity = (itemId, option, newQuantity) => {
-        if (newQuantity < 1) {
-            removeFromCart(itemId, option);
-            return;
-        }
-
-        setCart(cart.map(item =>
-            item._id === itemId && item.option === option
-                ? { ...item, quantity: newQuantity }
-                : item
-        ));
-    };
-
-    const calculateTotal = () => {
-        return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-    };
-
-    const handleCheckout = async () => {
-        try {
-            const promises = cart.map((item) =>
-                axios.post(`${host}/api/user/placeOrder`, {
-                    itemId: item._id,
-                    quantity: item.quantity,
-                    portion: item.option,
-                    tableNo: parseInt(tableId), 
-                    status: "created",
-                })
-            );
-        
-            const results = await Promise.all(promises);
-            console.log("All orders placed successfully:", results);
-            alert(`Order placed successfully for Table ${tableId}! Total: ₹${calculateTotal()}`);
-            setCart([]);
-            setShowCart(false);
-        } catch (error) {
-            console.error("Error placing order:", error.response?.data?.error || error.message);
-            alert(`Failed to place order: ${error.response?.data?.error || error.message}`);
-        }
-    };
-
-    const filteredItems = foodItems.filter(item => 
-        item?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
     return (
         <div style={{ backgroundColor: "#fffacd", minHeight: "100vh", paddingBottom: "20px" }}>
@@ -276,93 +358,149 @@ export default function Home() {
                         🛒 {cart.length > 0 && <span className="cart-count">{cart.reduce((acc, item) => acc + item.quantity, 0)}</span>}
                     </button>
 
-                    {/* Cart Modal */}
                     {showCart && (
-                        <div className="cart-modal">
-                            <div className="cart-content">
-                                <div className="cart-header">
-                                    <h2>Your Order</h2>
+                        <div className="cart-overlay">
+                            <div className="modern-cart-modal" ref={cartRef}>
+                                <div className="modern-cart-header">
+                                    <h2 className="cart-title">Your Order Summary</h2>
                                     <button 
-                                        className="close-cart"
+                                        className="modern-close-btn"
                                         onClick={() => setShowCart(false)}
+                                        aria-label="Close cart"
                                     >
-                                        ×
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
                                     </button>
                                 </div>
                                 
-                                {cart.length === 0 ? (
-                                    <p className="empty-cart-message">Your cart is empty</p>
-                                ) : (
-                                    <>
-                                        <div className="cart-items">
-                                            {cart.map((item, index) => (
-                                                <div key={`${item._id}-${item.option}-${index}`} className="cart-item">
-                                                    <div className="cart-item-info">
-                                                        <h4>{item.name} ({item.option})</h4>
-                                                        <p>₹{item.price} × {item.quantity}</p>
-                                                        {item.image && (
-                                                            <div className="item-image-container">
+                                <div className="modern-cart-body">
+                                    {cart.length === 0 ? (
+                                        <div className="empty-cart-state">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                            <h3>Your cart feels lonely</h3>
+                                            <p>Add some delicious items to get started</p>
+                                            <button 
+                                                className="modern-btn outline"
+                                                onClick={() => setShowCart(false)}
+                                            >
+                                                Browse Menu
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="modern-cart-items">
+                                                {cart.map((item, index) => (
+                                                    <div key={`${item._id}-${item.option}-${index}`} className="modern-cart-item">
+                                                        {item.imageUrl && (
+                                                            <div className="cart-item-media">
                                                                 <img 
-                                                                    src={item.image} 
-                                                                    alt={item.name} 
-                                                                    className="cart-item-image"
+                                                                    src={item.imageUrl} 
+                                                                    alt={item.name}
+                                                                    className="modern-cart-image"
                                                                 />
                                                                 <button 
-                                                                    onClick={() => saveImageToGallery(item.image, item.name)}
-                                                                    className="save-image-btn"
+                                                                    onClick={() => saveImageToGallery(item.imageUrl, item.name)}
+                                                                    className="image-action-btn"
+                                                                    aria-label="Save food image"
                                                                 >
-                                                                    Save Photo
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                                                    </svg>
                                                                 </button>
                                                             </div>
                                                         )}
+                                                        
+                                                        <div className="cart-item-details">
+                                                            <div className="item-meta">
+                                                                <h4 className="item-name">{item.name}</h4>
+                                                                <span className="item-option">{item.option}</span>
+                                                                <div className="item-pricing">
+                                                                    <span className="item-price">₹{item.price}</span>
+                                                                    <span className="item-multiply">×</span>
+                                                                    <span className="item-quantity">{item.quantity}</span>
+                                                                    <span className="item-subtotal">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className="item-actions">
+                                                                <div className="quantity-controls">
+                                                                    <button
+                                                                        onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
+                                                                        className="quantity-btn minus"
+                                                                        disabled={item.quantity <= 1}
+                                                                        aria-label="Decrease quantity"
+                                                                    >
+                                                                        −
+                                                                    </button>
+                                                                    <span className="quantity-display">{item.quantity}</span>
+                                                                    <button
+                                                                        onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
+                                                                        className="quantity-btn plus"
+                                                                        aria-label="Increase quantity"
+                                                                    >
+                                                                        +
+                                                                    </button>
+                                                                </div>
+                                                                
+                                                                <button
+                                                                    onClick={() => removeFromCart(item._id, item.option)}
+                                                                    className="delete-btn"
+                                                                    aria-label="Remove item"
+                                                                >
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="cart-item-actions">
-                                                        <button 
-                                                            onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
-                                                            className="quantity-btn"
-                                                        >
-                                                            -
-                                                        </button>
-                                                        <span>{item.quantity}</span>
-                                                        <button 
-                                                            onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
-                                                            className="quantity-btn"
-                                                        >
-                                                            +
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => removeFromCart(item._id, item.option)}
-                                                            className="remove-btn"
-                                                        >
-                                                            Remove
-                                                        </button>
-                                                    </div>
+                                                ))}
+                                            </div>
+                                            
+                                            <div className="modern-cart-summary">
+                                                <div className="summary-row">
+                                                    <span>Subtotal</span>
+                                                    <span>₹{calculateSubtotal().toFixed(2)}</span>
                                                 </div>
-                                            ))}
-                                        </div>
-                                        <div className="cart-total">
-                                            <h3>Total: ₹{calculateTotal()}</h3>
-                                        </div>
-                                        <div className="cart-actions">
-                                            <button 
-                                                className="save-bill-btn"
-                                                onClick={saveBillToGallery}
-                                            >
-                                                Save Bill
-                                            </button>
-                                            <button 
-                                                className="checkout-btn"
-                                                onClick={handleCheckout}
-                                            >
-                                                Place Order
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
+                                                <div className="summary-row">
+                                                    <span>Tax (5%)</span>
+                                                    <span>₹{(calculateSubtotal() * 0.05).toFixed(2)}</span>
+                                                </div>
+                                                <div className="summary-row total">
+                                                    <span>Total</span>
+                                                    <span>₹{calculateTotal().toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="modern-cart-footer">
+                                                <button 
+                                                    className="modern-btn secondary"
+                                                    onClick={saveReceiptToGallery}
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Save Receipt
+                                                </button>
+                                                <button 
+                                                    className="modern-btn primary"
+                                                    onClick={handleCheckout}
+                                                >
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                                    </svg>
+                                                    Confirm Order (₹{calculateTotal().toFixed(2)})
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
-                    
                     <Footer />
 
                     {showBackToTop && (

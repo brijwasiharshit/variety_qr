@@ -20,6 +20,7 @@ import Front from "./components/front"
 import Admin from "./components/admin"
 import Thanks from "./components/screens/thanks";
 import AdminPanel from "./components/screens/kitchen";
+import Last from "./components/screens/last"
 // ✅ Create Theme Context for Dark Mode
 const ThemeContext = createContext();
 export const useTheme = () => useContext(ThemeContext);
@@ -57,7 +58,9 @@ function App() {
                <Route path = "/admin" element = {<Admin />} />
                <Route path = "/thanks" element = {<Thanks/>} />
                <Route path = "/kitchen" element = {<AdminPanel/>} />
+               <Route path = "/last" element = {<Last/>} />
               </Routes>
+
             </div>
           </div>
         </Router>

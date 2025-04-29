@@ -1,0 +1,152 @@
+.thank-you-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 20px;
+  }
+  
+  .thank-you-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .checkmark {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+  }
+  
+  .checkmark-circle {
+    stroke: #4CAF50;
+    stroke-width: 2;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+  }
+  
+  .checkmark-check {
+    transform-origin: 50% 50%;
+    stroke: #4CAF50;
+    stroke-width: 2;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+  }
+  
+  @keyframes stroke {
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+  .thank-you-title {
+    color: #2d3748;
+    font-size: 2rem;
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+  
+  .thank-you-message {
+    color: #4a5568;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+  
+  .order-details {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 1rem;
+  }
+  
+  .detail-row:last-child {
+    margin-bottom: 0;
+  }
+  
+  .detail-row span:first-child {
+    color: #718096;
+    font-weight: 500;
+  }
+  
+  .detail-row span:last-child {
+    color: #2d3748;
+    font-weight: 600;
+  }
+  
+  .save-bill-btn {
+    background: #4299e1;
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .save-bill-btn:hover {
+    background: #3182ce;
+    transform: translateY(-2px);
+  }
+  
+  .save-bill-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .back-to-home-btn {
+    background: transparent;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .back-to-home-btn:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+  }
+  
+  @media (max-width: 480px) {
+    .thank-you-content {
+      padding: 30px 20px;
+    }
+    
+    .thank-you-title {
+      font-size: 1.6rem;
+    }
+    
+    .thank-you-message {
+      font-size: 1rem;
+    }
+  }
