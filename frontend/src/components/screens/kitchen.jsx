@@ -8,9 +8,6 @@ const KitchenDashboard = () => {
   const [orders, setOrders] = useState({});
   const [expandedTables, setExpandedTables] = useState({});
   const [notifications, setNotifications] = useState([]);
-  const [showClearTableModal, setShowClearTableModal] = useState(false);
-  const [tableToClear, setTableToClear] = useState(null);
-  const [verificationNumber, setVerificationNumber] = useState('');
   const navigate = useNavigate();
   const host = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -121,25 +118,11 @@ const KitchenDashboard = () => {
     }
   };
 
-  const handleClearTableClick = (tableNumber) => {
-    setTableToClear(tableNumber);
-    setShowClearTableModal(true);
-    setVerificationNumber('');
-  };
-
-  const handleClearTableConfirm = async () => {
-    if (!verificationNumber) {
-      alert('Please enter the mobile to confirm');
-      return;
-    }
-
-    if (parseInt(verificationNumber) !== parseInt(tableToClear)) {
-      alert('Entered mobile does not match');
-      return;
-    }
-
+  const handleClearTable = async (tableNumber) => {
+    const notificationId = Date.now();
+    
     try {
-      const response = await fetch(`${host}/api/kitchen/clearTable/${tableToClear}`, {
+      const response = await fetch(`${host}/api/kitchen/clearTable/${tableNumber}`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -149,67 +132,49 @@ const KitchenDashboard = () => {
         // Update local state to remove the cleared table
         setOrders(prevOrders => {
           const newOrders = {...prevOrders};
-          delete newOrders[tableToClear];
+          delete newOrders[tableNumber];
           return newOrders;
         });
         
         // Show success notification
-        const notificationId = Date.now();
         setNotifications((prevNotifications) => [
           ...prevNotifications,
           { 
-            message: `Table ${tableToClear} cleared successfully`, 
+            message: `Great done! Table ${tableNumber} cleared successfully`, 
             id: notificationId, 
             type: 'success' 
           },
         ]);
-        
-        setTimeout(() => {
-          setNotifications((prevNotifications) =>
-            prevNotifications.filter((notif) => notif.id !== notificationId)
-          );
-        }, 5000);
       } else {
         // Show error notification
-        const notificationId = Date.now();
         setNotifications((prevNotifications) => [
           ...prevNotifications,
           { 
-            message: `Failed to clear Table ${tableToClear}: ${data.error}`, 
+            message: `Failed to clear Table ${tableNumber}: ${data.error}`, 
             id: notificationId, 
             type: 'error' 
           },
         ]);
-        
-        setTimeout(() => {
-          setNotifications((prevNotifications) =>
-            prevNotifications.filter((notif) => notif.id !== notificationId)
-          );
-        }, 5000);
       }
     } catch (err) {
       console.error("Error clearing table:", err);
       // Show error notification
-      const notificationId = Date.now();
       setNotifications((prevNotifications) => [
         ...prevNotifications,
         { 
-          message: `Error clearing Table ${tableToClear}`, 
+          message: `Error clearing Table ${tableNumber}`, 
           id: notificationId, 
           type: 'error' 
         },
       ]);
-      
-      setTimeout(() => {
-        setNotifications((prevNotifications) =>
-          prevNotifications.filter((notif) => notif.id !== notificationId)
-        );
-      }, 5000);
     }
-
-    setShowClearTableModal(false);
-    setTableToClear(null);
-    setVerificationNumber('');
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      setNotifications((prevNotifications) =>
+        prevNotifications.filter((notif) => notif.id !== notificationId)
+      );
+    }, 5000);
   };
 
   const getStatusIcon = (status) => {
@@ -233,40 +198,6 @@ const KitchenDashboard = () => {
 
   return (
     <div className="kitchen-container">
-      {/* Clear Table Confirmation Modal */}
-      {showClearTableModal && (
-        <div className="modal-overlay">
-          <div className="clear-table-modal">
-            <h3>Clear Table {tableToClear}</h3>
-            <p>To confirm, please enter the mobile number:</p>
-            <input
-              type="number"
-              value={verificationNumber}
-              onChange={(e) => setVerificationNumber(e.target.value)}
-              placeholder="Enter mobile number"
-              className="verification-input"
-            />
-            <div className="modal-actions">
-              <button 
-                onClick={() => {
-                  setShowClearTableModal(false);
-                  setTableToClear(null);
-                }}
-                className="cancel-btn"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleClearTableConfirm}
-                className="confirm-btn"
-              >
-                Confirm Clear
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Notification System */}
       <div className="notifications">
         {notifications.map((notif) => (
@@ -298,7 +229,7 @@ const KitchenDashboard = () => {
                   className="clear-table-btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleClearTableClick(tableNumber);
+                    handleClearTable(tableNumber);
                   }}
                   title="Clear Table"
                 >
@@ -329,37 +260,6 @@ const KitchenDashboard = () => {
                         </div>
                         <div className="item-quantity">×{order.quantity}</div>
                         <div className="item-price">₹{order.price}</div>
-                      </div>
-
-                      <div className="order-actions">
-                        <button
-                          className={`status-btn ${order.status === 'created' ? 'active' : ''}`}
-                          onClick={() => updateOrderStatus(order._id, 'created')}
-                          disabled={order.status === 'created'}
-                        >
-                          Created
-                        </button>
-                        <button
-                          className={`status-btn ${order.status === 'preparing' ? 'active' : ''}`}
-                          onClick={() => updateOrderStatus(order._id, 'preparing')}
-                          disabled={order.status === 'preparing'}
-                        >
-                          Preparing
-                        </button>
-                        <button
-                          className={`status-btn ${order.status === 'ready' ? 'active' : ''}`}
-                          onClick={() => updateOrderStatus(order._id, 'ready')}
-                          disabled={order.status === 'ready'}
-                        >
-                          Ready
-                        </button>
-                        <button
-                          className={`status-btn ${order.status === 'served' ? 'active' : ''}`}
-                          onClick={() => updateOrderStatus(order._id, 'served')}
-                          disabled={order.status === 'served'}
-                        >
-                          Served
-                        </button>
                       </div>
                     </div>
                   ))
