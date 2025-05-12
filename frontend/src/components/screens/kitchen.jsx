@@ -23,7 +23,7 @@ const KitchenDashboard = () => {
     const token = cookies.token;
     const role = cookies.role;
 
-    if (!token || role !== 'Kitchen') {
+    if (!token || role != 'Kitchen') {
       navigate('/login');
     }
   }, [navigate]);
