@@ -7,6 +7,40 @@ import "./home.css";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const ThankYouPopup = ({ onClose }) => {
+  return (
+    <div className="thank-you-popup-overlay">
+      <div className="thank-you-popup-content">
+        <svg className="checkmark" viewBox="0 0 52 52">
+          <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+        
+        <h1 className="thank-you-title">Thank You For Your Order!</h1>
+        <p className="thank-you-message">Your delicious food is being prepared and will arrive soon</p>
+        
+        <div className="order-details">
+          <div className="detail-row">
+            <span>Estimated Delivery Time:</span>
+            <span>30-45 minutes</span>
+          </div>
+          <div className="detail-row">
+            <span>Order Number:</span>
+            <span>#{Math.floor(Math.random() * 1000000)}</span>
+          </div>
+        </div>
+        
+        <button 
+          className="back-to-home-btn"
+          onClick={onClose}
+        >
+          Continue Shopping
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default function Home() {
     const params = useParams();
     const navigate = useNavigate();
@@ -20,6 +54,7 @@ export default function Home() {
     const [showBackToTop, setShowBackToTop] = useState(false);
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
+    const [showThankYou, setShowThankYou] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: "" });
     const cartRef = useRef(null);
 
@@ -187,7 +222,7 @@ export default function Home() {
         ));
     };
 
-    // Handle checkout - Updated to navigate to last.js
+    // Handle checkout - Updated to show popup
     const handleCheckout = async () => {
         try {
             const promises = cart.map((item) =>
@@ -203,19 +238,8 @@ export default function Home() {
             const results = await Promise.all(promises);
             console.log("All orders placed successfully:", results);
             
-            // Navigate to last.js with order details
-            navigate('/last', {
-                state: {
-                    totalAmount: calculateTotal().toFixed(2),
-                    tableId: tableId,
-                    orderDetails: cart.map(item => ({
-                        name: item.name,
-                        option: item.option,
-                        quantity: item.quantity,
-                        price: item.price
-                    }))
-                }
-            });
+            // Show thank you popup
+            setShowThankYou(true);
             
             // Clear cart
             setCart([]);
@@ -283,6 +307,11 @@ export default function Home() {
                 <div className="notification-popup">
                     {notification.message}
                 </div>
+            )}
+
+            {/* Thank You Popup */}
+            {showThankYou && (
+                <ThankYouPopup onClose={() => setShowThankYou(false)} />
             )}
 
             {!isLoaded ? (
@@ -391,74 +420,69 @@ export default function Home() {
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="modern-cart-items">
-                                                {cart.map((item, index) => (
-                                                    <div key={`${item._id}-${item.option}-${index}`} className="modern-cart-item">
-                                                        {item.imageUrl && (
-                                                            <div className="cart-item-media">
-                                                                <img 
-                                                                    src={item.imageUrl} 
-                                                                    alt={item.name}
-                                                                    className="modern-cart-image"
-                                                                />
-                                                                <button 
-                                                                    onClick={() => saveImageToGallery(item.imageUrl, item.name)}
-                                                                    className="image-action-btn"
-                                                                    aria-label="Save food image"
-                                                                >
-                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                        
-                                                        <div className="cart-item-details">
-                                                            <div className="item-meta">
-                                                                <h4 className="item-name">{item.name}</h4>
-                                                                <span className="item-option">{item.option}</span>
-                                                                <div className="item-pricing">
-                                                                    <span className="item-price">₹{item.price}</span>
-                                                                    <span className="item-multiply">×</span>
-                                                                    <span className="item-quantity">{item.quantity}</span>
-                                                                    <span className="item-subtotal">₹{(item.price * item.quantity).toFixed(2)}</span>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div className="item-actions">
-                                                                <div className="quantity-controls">
-                                                                    <button
-                                                                        onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
-                                                                        className="quantity-btn minus"
-                                                                        disabled={item.quantity <= 1}
-                                                                        aria-label="Decrease quantity"
-                                                                    >
-                                                                        −
-                                                                    </button>
-                                                                    <span className="quantity-display">{item.quantity}</span>
-                                                                    <button
-                                                                        onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
-                                                                        className="quantity-btn plus"
-                                                                        aria-label="Increase quantity"
-                                                                    >
-                                                                        +
-                                                                    </button>
-                                                                </div>
-                                                                
-                                                                <button
-                                                                    onClick={() => removeFromCart(item._id, item.option)}
-                                                                    className="delete-btn"
-                                                                    aria-label="Remove item"
-                                                                >
-                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                    </svg>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                         <div 
+  className="modern-cart-items"
+  style={{ backgroundColor: '#f0fff4', padding: '1rem', borderRadius: '8px' }}
+>
+  {cart.map((item, index) => (
+    <div 
+      key={`${item._id}-${item.option}-${index}`} 
+      className="modern-cart-item"
+      style={{ 
+        backgroundColor: '#ffffff',
+        border: '1px solid #c6f6d5',
+        borderRadius: '8px',
+        padding: '0.75rem',
+        marginBottom: '1rem',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)'
+      }}
+    >
+      <div className="cart-item-details">
+        <div className="item-meta">
+          <h4 className="item-name">{item.name}</h4>
+          <span className="item-option">{item.option}</span>
+          <div className="item-pricing">
+            <span className="item-price">₹{item.price}</span>
+            <span className="item-multiply">×</span>
+            <span className="item-quantity">{item.quantity}</span>
+            <span className="item-subtotal">₹{(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        </div>
+        
+        <div className="item-actions">
+          <div className="quantity-controls">
+            <button
+              onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
+              className="quantity-btn minus"
+              disabled={item.quantity <= 1}
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
+            <span className="quantity-display">{item.quantity}</span>
+            <button
+              onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
+              className="quantity-btn plus"
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+          
+          <button
+            onClick={() => removeFromCart(item._id, item.option)}
+            className="delete-btn"
+            aria-label="Remove item"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
                                             
                                             <div className="modern-cart-summary">
                                                 <div className="summary-row">
@@ -476,15 +500,6 @@ export default function Home() {
                                             </div>
                                             
                                             <div className="modern-cart-footer">
-                                                <button 
-                                                    className="modern-btn secondary"
-                                                    onClick={saveReceiptToGallery}
-                                                >
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                    Save Receipt
-                                                </button>
                                                 <button 
                                                     className="modern-btn primary"
                                                     onClick={handleCheckout}

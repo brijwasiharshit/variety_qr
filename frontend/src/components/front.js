@@ -8,43 +8,65 @@ const useStyles = createUseStyles({
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    fontFamily: "'Poppins', sans-serif",
+    background: '#F5F5F0', // Soft cream background
+    fontFamily: "'Playfair Display', serif",
     padding: '2rem',
+    position: 'relative',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '40%',
+      background: '#E8E4D9', // Darker cream accent
+      zIndex: 0,
+      transform: 'skewY(-4deg)',
+      transformOrigin: 'top left',
+    }
   },
   content: {
     textAlign: 'center',
-    padding: '3rem 2rem',
+    padding: '4rem 3rem',
     maxWidth: '900px',
     width: '100%',
-    background: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: '20px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-    backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255, 255, 255, 0.18)',
-    color: '#fff',
+    background: '#FFFDF7', // Pure cream white
+    borderRadius: '16px',
+    boxShadow: '0 15px 30px rgba(0, 0, 0, 0.08)',
+    position: 'relative',
+    zIndex: 1,
+    border: '1px solid rgba(0, 0, 0, 0.05)',
+    color: '#5A4A42', // Earthy brown text
   },
   title: {
     fontSize: '3.5rem',
-    marginBottom: '1rem',
+    marginBottom: '1.5rem',
     fontWeight: 700,
-    background: 'linear-gradient(to right, #fff, #f9d5bb)',
-    WebkitBackgroundClip: 'text',
-    backgroundClip: 'text',
-    color: 'transparent',
-    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    color: '#3A332E', // Dark chocolate
+    position: 'relative',
+    '&::after': {
+      content: '""',
+      display: 'block',
+      width: '80px',
+      height: '4px',
+      background: '#D4A76A', // Gold accent
+      margin: '1rem auto',
+      borderRadius: '2px'
+    },
     '@media (max-width: 768px)': {
-      fontSize: '2.5rem',
+      fontSize: '2.8rem',
     }
   },
   subtitle: {
-    fontSize: '1.5rem',
+    fontSize: '1.3rem',
     marginBottom: '3rem',
-    fontWeight: 300,
-    opacity: 0.9,
+    fontWeight: 400,
+    color: '#7D6E63', // Lighter brown
+    lineHeight: 1.6,
     '@media (max-width: 768px)': {
-      fontSize: '1.2rem',
-      marginBottom: '2rem',
+      fontSize: '1.1rem',
+      marginBottom: '2.5rem',
     }
   },
   buttonGrid: {
@@ -52,54 +74,89 @@ const useStyles = createUseStyles({
     gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '1.5rem',
     margin: '0 auto',
-    maxWidth: '700px',
+    maxWidth: '800px',
     '@media (max-width: 768px)': {
       gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '1rem',
+      gap: '1.2rem',
     }
   },
   tableButton: {
-    padding: '1.5rem 0.5rem',
+    padding: '1.8rem 0.5rem',
     fontSize: '1.5rem',
     fontWeight: '600',
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: 'white',
-    border: '2px solid rgba(255, 255, 255, 0.3)',
+    background: '#FFFDF7',
+    color: '#5A4A42',
+    border: '1px solid #E8E4D9',
     borderRadius: '12px',
     cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-    backdropFilter: 'blur(5px)',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    position: 'relative',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      background: 'linear-gradient(135deg, rgba(212,167,106,0.1) 0%, rgba(255,255,255,0) 100%)',
+      zIndex: 0,
+    },
     '&:hover': {
-      background: 'rgba(255, 255, 255, 0.2)',
       transform: 'translateY(-5px)',
-      boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+      borderColor: '#D4A76A',
+      '& span': {
+        transform: 'scale(1.05)',
+      }
     },
     '&:active': {
-      transform: 'translateY(-1px)',
+      transform: 'translateY(-2px)',
     },
     '@media (max-width: 768px)': {
-      padding: '1.2rem 0.5rem',
-      fontSize: '1.2rem',
+      padding: '1.5rem 0.5rem',
+      fontSize: '1.3rem',
     }
   },
   buttonText: {
     display: 'block',
     transition: 'all 0.3s ease',
+    position: 'relative',
+    zIndex: 1,
   },
   loadingMessage: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: '1.2rem',
-    marginTop: '1rem',
+    color: '#7D6E63',
+    fontSize: '1.3rem',
+    marginTop: '2rem',
+    fontStyle: 'italic',
   },
   errorMessage: {
-    color: '#ff6b6b',
-    fontSize: '1.2rem',
-    marginTop: '1rem',
+    color: '#C17C74', // Soft red
+    fontSize: '1.3rem',
+    marginTop: '2rem',
+    fontWeight: 500,
   },
   fallbackMessage: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontStyle: 'italic',
-    marginTop: '0.5rem',
+    color: '#A89B8C',
+    fontSize: '1.1rem',
+    marginTop: '1rem',
+  },
+  decorativeElement: {
+    position: 'absolute',
+    width: '150px',
+    height: '150px',
+    background: 'rgba(212,167,106,0.1)',
+    borderRadius: '50%',
+    zIndex: 0,
+    '&:nth-child(1)': {
+      top: '-50px',
+      left: '-50px',
+    },
+    '&:nth-child(2)': {
+      bottom: '-30px',
+      right: '-30px',
+    }
   }
 });
 
@@ -127,7 +184,6 @@ const Front = () => {
       } catch (err) {
         console.error('Failed to fetch tables:', err);
         setError(err.message);
-        // Fallback to default tables if API fails
         setTables([1, 2, 3, 4, 5, 6, 7, 8].map(num => ({ tableNo: num })));
       } finally {
         setLoading(false);
@@ -167,9 +223,16 @@ const Front = () => {
 
   return (
     <div className={classes.container}>
+      <div className={classes.decorativeElement} />
+      <div className={classes.decorativeElement} />
+      
       <div className={classes.content}>
         <h1 className={classes.title}>Welcome to Variety</h1>
-        <p className={classes.subtitle}>Select your table to begin an exquisite experience</p>
+        <p className={classes.subtitle}>
+          Select your table to begin an exquisite dining experience
+          <br />
+          where every detail is crafted for your pleasure
+        </p>
         
         <div className={classes.buttonGrid}>
           {tables.map((table) => (

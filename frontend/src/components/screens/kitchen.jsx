@@ -21,7 +21,7 @@ const KitchenDashboard = () => {
 
     const token = cookies.token;
     const role = cookies.role;
-    
+
     if (!token || role !== 'Kitchen') {
       navigate('/login');
     }
@@ -120,39 +120,39 @@ const KitchenDashboard = () => {
 
   const handleClearTable = async (tableNumber) => {
     const notificationId = Date.now();
-    
+
     try {
       const response = await fetch(`${host}/api/kitchen/clearTable/${tableNumber}`, {
         method: 'POST',
         credentials: 'include',
       });
-      
+
       const data = await response.json();
       if (data.success) {
         // Update local state to remove the cleared table
         setOrders(prevOrders => {
-          const newOrders = {...prevOrders};
+          const newOrders = { ...prevOrders };
           delete newOrders[tableNumber];
           return newOrders;
         });
-        
+
         // Show success notification
         setNotifications((prevNotifications) => [
           ...prevNotifications,
-          { 
-            message: `Great done! Table ${tableNumber} cleared successfully`, 
-            id: notificationId, 
-            type: 'success' 
+          {
+            message: `Great done! Table ${tableNumber} cleared successfully`,
+            id: notificationId,
+            type: 'success'
           },
         ]);
       } else {
         // Show error notification
         setNotifications((prevNotifications) => [
           ...prevNotifications,
-          { 
-            message: `Failed to clear Table ${tableNumber}: ${data.error}`, 
-            id: notificationId, 
-            type: 'error' 
+          {
+            message: `Failed to clear Table ${tableNumber}: ${data.error}`,
+            id: notificationId,
+            type: 'error'
           },
         ]);
       }
@@ -161,14 +161,14 @@ const KitchenDashboard = () => {
       // Show error notification
       setNotifications((prevNotifications) => [
         ...prevNotifications,
-        { 
-          message: `Error clearing Table ${tableNumber}`, 
-          id: notificationId, 
-          type: 'error' 
+        {
+          message: `Error clearing Table ${tableNumber}`,
+          id: notificationId,
+          type: 'error'
         },
       ]);
     }
-    
+
     // Remove notification after 5 seconds
     setTimeout(() => {
       setNotifications((prevNotifications) =>
@@ -214,7 +214,7 @@ const KitchenDashboard = () => {
       <div className="tables-grid">
         {Object.keys(orders).sort((a, b) => a - b).map(tableNumber => (
           <div key={tableNumber} className="table-card">
-            <div 
+            <div
               className="table-header"
               onClick={() => toggleTableExpanded(tableNumber)}
             >
@@ -225,16 +225,19 @@ const KitchenDashboard = () => {
                 </span>
               </div>
               <div className="table-actions">
-                <button 
+                <button
                   className="clear-table-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleClearTable(tableNumber);
                   }}
-                  title="Clear Table"
+                  title="Mark Table as Cleared"
                 >
-                  <Trash2 size={18} />
+                  <Check size={18} style={{ color: 'green' }} />
                 </button>
+
+
+
                 {expandedTables[tableNumber] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
               </div>
             </div>
@@ -253,7 +256,7 @@ const KitchenDashboard = () => {
                           <span>{order.status}</span>
                         </div>
                       </div>
-                      
+
                       <div className="order-details">
                         <div className="item-name">
                           {order.itemName} ({order.portion})
