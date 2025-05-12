@@ -13,7 +13,8 @@ const KitchenDashboard = () => {
 
   // Redirect if no token cookie exists
   useEffect(() => {
-    console.log(document.cookie);
+    //cookies
+    console.log("cookies", document.cookie);
     const cookies = document.cookie.split(';').reduce((acc, cookie) => {
       const [name, value] = cookie.trim().split('=');
       acc[name] = value;
