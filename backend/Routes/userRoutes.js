@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 require("dotenv").config();
+//updated
 
 router.get("/foodData", async (req, res) => {
   try {
