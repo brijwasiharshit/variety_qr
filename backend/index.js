@@ -13,7 +13,7 @@ const userRouter = require('./Routes/userRoutes');
 
 const app = express();
 const server = http.createServer(app);
-
+app.use(cookieParser());
 // ⚡ Initialize Socket.IO
 const io = new Server(server, {
   cors: {
@@ -42,7 +42,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser());
+
 
 // 📦 Routes
 app.use("/api/user", userRouter);
