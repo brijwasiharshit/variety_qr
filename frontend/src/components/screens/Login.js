@@ -36,11 +36,11 @@ export default function Login() {
         throw new Error(data.error || "Login failed");
       }
   
-    
+      
       if (data?.user?.role == "Admin") {
         navigate("/admin");
       } else if (data?.user?.role == "Kitchen") {
-
+        console.log("kitchen!!");
         navigate("/kitchen");
       } else {
         throw new Error("Invalid role, contact support.");
