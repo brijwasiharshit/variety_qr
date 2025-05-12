@@ -7,7 +7,7 @@ import "./home.css";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const ThankYouPopup = ({ onClose }) => {
+const ThankYouPopup = ({ onClose, tableId }) => {
   return (
     <div className="thank-you-popup-overlay">
       <div className="thank-you-popup-content">
@@ -22,13 +22,23 @@ const ThankYouPopup = ({ onClose }) => {
         <div className="order-details">
           <div className="detail-row">
             <span>Estimated Delivery Time:</span>
-            <span>30-45 minutes</span>
+            <span>15-20 minutes</span>
           </div>
           <div className="detail-row">
             <span>Order Number:</span>
             <span>#{Math.floor(Math.random() * 1000000)}</span>
           </div>
         </div>
+        
+        {/* Add View Orders Button */}
+        <button 
+          className="view-orders-btn"
+          onClick={() => {
+            window.location.href = `/${tableId}/orders`;
+          }}
+        >
+          View My Orders
+        </button>
         
         <button 
           className="back-to-home-btn"
@@ -66,7 +76,7 @@ export default function Home() {
     // Calculate total with tax (5%)
     const calculateTotal = () => {
         const subtotal = calculateSubtotal();
-        return subtotal + (subtotal * 0.05);
+        return subtotal ;
     };
 
     // Show notification
@@ -309,18 +319,17 @@ export default function Home() {
                 </div>
             )}
 
-            {/* Thank You Popup */}
-            {showThankYou && (
-                <ThankYouPopup onClose={() => setShowThankYou(false)} />
-            )}
+    
+{showThankYou && (
+  <ThankYouPopup 
+    onClose={() => setShowThankYou(false)} 
+    tableId={tableId} 
+  />
+)}
 
             {!isLoaded ? (
                 <div className="loading-container">
-                    <img
-                        src="https://i.postimg.cc/fLXQjdgL/Untitled-design-5.jpg"
-                        alt="Variety Sweets Logo"
-                        className="loading-logo"
-                    />
+                   
                     <div className="loading-spinner"></div>
                 </div>
             ) : error ? (
@@ -489,10 +498,7 @@ export default function Home() {
                                                     <span>Subtotal</span>
                                                     <span>₹{calculateSubtotal().toFixed(2)}</span>
                                                 </div>
-                                                <div className="summary-row">
-                                                    <span>Tax (5%)</span>
-                                                    <span>₹{(calculateSubtotal() * 0.05).toFixed(2)}</span>
-                                                </div>
+                                             
                                                 <div className="summary-row total">
                                                     <span>Total</span>
                                                     <span>₹{calculateTotal().toFixed(2)}</span>

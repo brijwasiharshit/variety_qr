@@ -149,6 +149,33 @@ router.post("/placeOrder", async (req, res) => {
     });
   }
 });
+router.get('/tableOrders/:tableId', async (req, res) => {
+  try {
+    const { tableId } = req.params;
+
+    const orders = await orderItem.find({
+      tableNo: tableId,
+      status: "created",
+    })
+    .sort({ createdAt: 1 })
+    .populate("itemId", "name"); // populate only the 'name' field of FoodItem
+
+    // Format orders to include itemName directly
+    const formattedOrders = orders.map(order => ({
+      _id: order._id,
+      itemName: order.itemId.name, // populated name from FoodItem
+      quantity: order.quantity,
+      portion: order.portion,
+      price: order.totalPrice,
+      createdAt: order.createdAt,
+    }));
+
+    res.json({ success: true, orders: formattedOrders });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 router.post("/login", async (req, res) => {
   try {
@@ -201,22 +228,5 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/:tableNumber/currentOrders", async (req, res) => {
-  try {
-    const tableNumber = parseInt(req.params.tableNumber);
-
-    const orders = await orderItem
-      .find({
-        tableNo: tableNumber,
-        status: "created",
-      })
-     console.log(orders);
-
-    res.status(200).json(orders);
-  } catch (err) {
-    console.error("❌ Error fetching orders:", err);
-    res.status(500).json({ error: "Failed to fetch orders" });
-  }
-});
 
 module.exports = router;

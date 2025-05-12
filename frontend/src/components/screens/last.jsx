@@ -23,7 +23,7 @@ export default function ThankYouPage() {
         <div className="order-details">
           <div className="detail-row">
             <span>Estimated Delivery Time:</span>
-            <span>30-45 minutes</span>
+            <span>15-20 minutes</span>
           </div>
           <div className="detail-row">
             <span>Order Number:</span>

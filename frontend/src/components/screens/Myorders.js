@@ -1,31 +1,42 @@
 import React, { useEffect, useState } from "react";
-import "./myorders.css"; // Import CSS for styling
+import { useParams } from "react-router-dom";
+import "./myorders.css";
 
 export default function MyOrders() {
+  const host = process.env.REACT_APP_HOST;
   const [orders, setOrders] = useState([]);
-  const authToken = localStorage.getItem("authToken");
+  const { tableId } = useParams();
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch(`${host}/api/user/tableOrders/${tableId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      console.log(data);
+      if (data.success) {
+        setOrders(data.orders);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
 
   useEffect(() => {
-    if (!authToken) return;
-
-    fetch("/api/myorders", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`, 
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setOrders(data))
-      .catch((error) => console.error("Error fetching orders:", error));
-  }, [authToken]);
+    fetchOrders();
+    const intervalId = setInterval(fetchOrders, 5000);
+    return () => clearInterval(intervalId);
+  }, [tableId]); // added tableId for safety
 
   return (
     <div className="orders-container">
-      <h2 className="orders-title">📜 My Orders</h2>
+      <h2 className="orders-title">📜 Table {tableId} Orders</h2>
 
       {orders.length === 0 ? (
-        <p className="no-orders">😔 You haven't placed any orders yet.</p>
+        <p className="no-orders">😔 No orders placed yet for this table.</p>
       ) : (
         <div className="table-container">
           <table className="orders-table">
@@ -33,29 +44,21 @@ export default function MyOrders() {
               <tr>
                 <th>#</th>
                 <th>Items</th>
-                <th>Total Price</th>
-                <th>Status</th>
-                <th>Date</th>
+                <th>Quantity</th>
+                <th>Portion</th>
+                <th>Price</th>
+                <th>Time</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order, index) => (
                 <tr key={order._id} className="order-row">
                   <td>{index + 1}</td>
-                  <td>
-                    {order.items.map((item) => (
-                      <div key={item._id} className="order-item">
-                        🍽️ {item.name} × {item.quantity}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="price">₹{order.totalPrice}</td>
-                  <td>
-                    <span className={`status-badge ${order.status === "Delivered" ? "delivered" : "pending"}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td>{new Date(order.createdAt).toLocaleString()}</td>
+                  <td>{order.itemName}</td>
+                  <td>{order.quantity}</td>
+                  <td>{order.portion}</td>
+                  <td className="price">₹{order.price}</td>
+                  <td>{new Date(order.createdAt).toLocaleTimeString()}</td>
                 </tr>
               ))}
             </tbody>

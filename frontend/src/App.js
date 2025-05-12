@@ -39,20 +39,14 @@ function App() {
         <Router>
           <div className={`app-container ${darkMode ? "dark-mode" : "light-mode"}`}>
             <ConditionalNavbar toggleDarkMode={toggleDarkMode} darkMode={darkMode} />
-            
-          
-            
             {/* Page Animations */}
             <div className="page-transition">
               <Routes>
                 <Route path="/:tableId/home/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/createuser" element={<Signup />} />
-
-               
                 <Route path="/:tableId/orders" element={<MyOrders />} />
                 <Route path="/account" element={<Myaccount />} />
-              
                <Route path = "/menu" element = {<Menu />} />
                <Route path = "/" element = {<Front />} />
                <Route path = "/admin" element = {<Admin />} />

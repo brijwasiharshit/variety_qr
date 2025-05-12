@@ -1,13 +1,15 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useCart } from "./ContextReducer";
 import "./Carousel.css";
 import "./Navbar.css";
+import { FaClipboardList } from "react-icons/fa"; // Import orders icon
 
-export default function Navbar() {
+export default function Navbar({ toggleDarkMode, darkMode }) {
   const isAdmin = localStorage.getItem("isAdmin") === "true"; 
   const cart = useCart();
   const cartItemCount = cart.length;
+  const { tableId } = useParams(); // Get current tableId from URL
 
   return (
     <nav className="navbar navbar-expand-lg sexy-navbar">
@@ -29,9 +31,22 @@ export default function Navbar() {
           <div className="navbar-nav">
             <Link className="nav-link sexy-link" to="/">Home</Link>
             
+            {/* Add My Orders button if tableId exists */}
+            {tableId && (
+              <Link 
+                className="nav-link sexy-link orders-link" 
+                to={`/${tableId}/orders`}
+              >
+                <FaClipboardList className="me-1" />
+                My Orders
+                {cartItemCount > 0 && (
+                  <span className="orders-badge">{cartItemCount}</span>
+                )}
+              </Link>
+            )}
           </div>
 
-         
+       
         </div>
       </div>
     </nav>

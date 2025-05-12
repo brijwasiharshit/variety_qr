@@ -93,49 +93,7 @@ export default function Carousel({ setSearchQuery, searchQuery }) {
                 margin: '0 -15px' // Negative margin for full width on mobile
               }}
             >
-              <div className="carousel-inner">
-                <div className="carousel-item">
-                  <img
-                    src="https://media.istockphoto.com/id/922783734/photo/assorted-indian-recipes-food-various.jpg?s=612x612&w=0&k=20&c=p8DepvymWfC5j7c6En2UsQ6sUM794SQMwceeBW3yQ9M="
-                    className="d-block w-100"
-                    alt="Indian food assortment"
-                    data-bs-interval="500" 
-                    style={{ 
-                      height: '50vh',
-                      minHeight: '300px',
-                      objectFit: 'cover',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-                <div className="carousel-item active">
-                  <img
-                    src="https://i.postimg.cc/j5PmSvWG/Home.png"
-                    alt="Delicious food"
-                    className="d-block w-100"
-                    data-bs-interval="500" 
-                    style={{ 
-                      height: '50vh',
-                      minHeight: '300px',
-                      objectFit: 'cover',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-                <div className="carousel-item">
-                  <img
-                    src="https://static.toiimg.com/photo/94078477.cms"
-                    className="d-block w-100"
-                    alt="Tasty dishes"
-                    style={{ 
-                      height: '50vh',
-                      minHeight: '300px',
-                      objectFit: 'cover',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              </div>
+     
 
               <button
                 className="carousel-control-prev"

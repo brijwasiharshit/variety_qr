@@ -20,7 +20,7 @@ export default function Login() {
     try {
       const response = await fetch(`${host}/api/user/login`, {
         method: "POST",
-        credentials: 'include', // Important for sending cookies
+        credentials: 'include', 
         headers: {
           "Content-Type": "application/json",
         },
@@ -28,18 +28,19 @@ export default function Login() {
           email: credentials.email,
           password: credentials.password,
         }),
-      });
+      }); 
   
       const data = await response.json();
-  
+     
       if (!response.ok) {
         throw new Error(data.error || "Login failed");
       }
   
-      // 👉 Check role and navigate accordingly
+    
       if (data.user.role === "Admin") {
         navigate("/admin");
       } else if (data.user.role === "Kitchen") {
+
         navigate("/kitchen");
       } else {
         throw new Error("Invalid role, contact support.");

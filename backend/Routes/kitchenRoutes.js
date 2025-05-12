@@ -80,6 +80,22 @@ kitchenRouter.post("/clearTable/:tableId", async (req, res) => {
       });
   }
 });
+kitchenRouter.get('/tableOrders/:tableId', async (req, res) => {
+  try {
+    console.log("called!");
+    const { tableId } = req.params;
+
+    const orders = await OrderItem.find({
+      tableNo: tableId,
+      status: "created",
+    }).sort({ createdAt: 1 }); 
+
+    res.json({ success: true, orders });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
 module.exports = kitchenRouter;
