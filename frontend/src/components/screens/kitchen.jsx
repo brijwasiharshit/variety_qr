@@ -12,22 +12,8 @@ const KitchenDashboard = () => {
   const host = process.env.REACT_APP_HOST;
 
   // Redirect if no token cookie exists
-  useEffect(() => {
-    //cookies
-    console.log("cookies", document.cookie);
-    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-      const [name, value] = cookie.trim().split('=');
-      acc[name] = value;
-      return acc;
-    }, {});
-   
-    const token = cookies.token;
-    const role = cookies.role;
 
-    if (!token || role != 'Kitchen') {
-      navigate('/login');
-    }
-  }, [navigate]);
+
 
   // Set up socket connection to listen for new orders
   useEffect(() => {
