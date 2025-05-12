@@ -37,9 +37,9 @@ export default function Login() {
       }
   
     
-      if (data.user.role === "Admin") {
+      if (data?.user?.role == "Admin") {
         navigate("/admin");
-      } else if (data.user.role === "Kitchen") {
+      } else if (data?.user?.role == "Kitchen") {
 
         navigate("/kitchen");
       } else {
