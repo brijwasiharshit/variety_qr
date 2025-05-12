@@ -35,19 +35,7 @@ const Analytics = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [name, value] = cookie.trim().split('=');
-        acc[name] = value;
-        return acc;
-      }, {});
-  
-      const token = cookies.token;
-      const role = cookies.role;
-  
-      if (!token || role !== 'Admin') {
-        navigate('/login');
-        return;
-      }
+   
   
       try {
         // Fetch each metric individually
