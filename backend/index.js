@@ -36,7 +36,7 @@ app.set('io', io);
 
 
 const corsOptions = {
-  origin: 'http://localhost:3000',  // your frontend URL
+  origin: 'https://variety-qr.onrender.com',  // your frontend URL
   credentials: true,
   optionsSuccessStatus: 200,
 };
