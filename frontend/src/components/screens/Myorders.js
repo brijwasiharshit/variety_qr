@@ -46,7 +46,7 @@ export default function MyOrders() {
                 <th>Items</th>
                 <th>Quantity</th>
                 <th>Portion</th>
-                <th>Price</th>
+             
                 <th>Time</th>
               </tr>
             </thead>
@@ -57,7 +57,7 @@ export default function MyOrders() {
                   <td>{order.itemName}</td>
                   <td>{order.quantity}</td>
                   <td>{order.portion}</td>
-                  <td className="price">₹{order.price}</td>
+                 
                   <td>{new Date(order.createdAt).toLocaleTimeString()}</td>
                 </tr>
               ))}

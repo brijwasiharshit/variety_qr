@@ -9,7 +9,7 @@ const KitchenDashboard = () => {
   const [expandedTables, setExpandedTables] = useState({});
   const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
-  const host = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const host = process.env.REACT_APP_HOST;
 
   // Redirect if no token cookie exists
   useEffect(() => {
