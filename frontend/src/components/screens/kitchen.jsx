@@ -13,12 +13,13 @@ const KitchenDashboard = () => {
 
   // Redirect if no token cookie exists
   useEffect(() => {
+    console.log(document.cookie);
     const cookies = document.cookie.split(';').reduce((acc, cookie) => {
       const [name, value] = cookie.trim().split('=');
       acc[name] = value;
       return acc;
     }, {});
-
+   
     const token = cookies.token;
     const role = cookies.role;
 
@@ -90,33 +91,7 @@ const KitchenDashboard = () => {
     }));
   };
 
-  const updateOrderStatus = async (orderId, status) => {
-    try {
-      const response = await fetch(`${host}/api/kitchen/updateOrderStatus/${orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ status })
-      });
 
-      const data = await response.json();
-      if (data.success) {
-        const updatedOrders = await fetch(`${host}/api/kitchen/allOrders`, {
-          credentials: 'include'
-        });
-        const updatedData = await updatedOrders.json();
-        if (updatedData.success) {
-          setOrders(updatedData.data);
-        }
-      } else {
-        console.error("Failed to update order:", data.error);
-      }
-    } catch (err) {
-      console.error("Error updating order:", err);
-    }
-  };
 
   const handleClearTable = async (tableNumber) => {
     const notificationId = Date.now();

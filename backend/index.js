@@ -17,7 +17,7 @@ const server = http.createServer(app);
 // ⚡ Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: "*", // In production, replace * with your frontend URL
+    origin: "*", 
     methods: ["GET", "POST"],
   }
 });
@@ -36,7 +36,7 @@ app.set('io', io);
 
 
 const corsOptions = {
-  origin: 'https://variety-qr.onrender.com',  // your frontend URL
+  origin: ['http://localhost:3000', 'https://variety-qr.onrender.com'],
   credentials: true,
   optionsSuccessStatus: 200,
 };
