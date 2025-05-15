@@ -55,7 +55,7 @@ kitchenRouter.post("/sendBill",(req,res) => {
 })
 kitchenRouter.post("/clearTable/:tableId", async (req, res) => {
   const { tableId } = req.params; 
-
+console.log("clear table called!");
   try {
     
       const orders = await OrderItem.updateMany(

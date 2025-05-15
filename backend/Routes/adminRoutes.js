@@ -111,9 +111,47 @@ adminRouter.get("/avgOrderValue", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-adminRouter.get("/oneWeekComparison",(req,res) => {
+adminRouter.get("/oneWeekComparison", async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-})
+    const salesData = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(today);
+      dayStart.setDate(today.getDate() - i);
+
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const orders = await Order.find({
+        status: "delivered",
+        createdAt: { $gte: dayStart, $lt: dayEnd }
+      }).lean();
+
+      let dailyTotal = 0;
+
+      for (const order of orders) {
+        const foodItem = await FoodItem.findById(order.itemId).lean();
+        if (foodItem && foodItem.options[order.portion]) {
+          dailyTotal += foodItem.options[order.portion] * order.quantity;
+        }
+      }
+
+      salesData.push({
+        date: dayStart.toISOString().split("T")[0], // Format: YYYY-MM-DD
+        totalSales: dailyTotal
+      });
+    }
+
+    res.json({ success: true, salesLast7Days: salesData });
+  } catch (err) {
+    console.error("Error in oneWeekComparison:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 
 adminRouter.post("/toggleAvl", async (req, res) => {

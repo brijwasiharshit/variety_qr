@@ -15,7 +15,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useNavigate } from 'react-router-dom';
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -35,35 +34,31 @@ const Analytics = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-   
-  
       try {
-        // Fetch each metric individually
-        const [salesTodayRes, weeklySalesRes, totalOrdersRes, avgOrderValueRes] = await Promise.all([
+        const [salesTodayRes, weeklyTrendRes, totalOrdersRes, avgOrderValueRes] = await Promise.all([
           axios.get(`${host}/api/admin/salesToday`, { withCredentials: true }),
-          axios.get(`${host}/api/admin/weeklySales`, { withCredentials: true }),
+          axios.get(`${host}/api/admin/oneWeekComparison`, { withCredentials: true }),
           axios.get(`${host}/api/admin/totalOrders`, { withCredentials: true }),
           axios.get(`${host}/api/admin/avgOrderValue`, { withCredentials: true }),
         ]);
 
-        // For sales trend chart (we will fetch it when your `/oneWeekComparison` route is ready)
-        // Now assuming you have a static sample for now
-
-        const sampleDates = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-        const sampleDailySales = [1000, 1500, 1200, 2000, 1800, 2200, 2500];
+        const trendData = weeklyTrendRes.data.salesLast7Days;
+        const dates = trendData.map(d => d.date); // e.g., ["2025-05-09", ...]
+        const dailySales = trendData.map(d => d.totalSales);
+        const totalWeekSales = dailySales.reduce((a, b) => a + b, 0);
 
         setSalesData({
           todaySales: salesTodayRes.data.totalSalesToday,
-          weeklySales: weeklySalesRes.data.totalSalesWeekly,
+          weeklySales: totalWeekSales,
           totalOrders: totalOrdersRes.data.totalOrders,
           avgOrderValue: avgOrderValueRes.data.avgOrderValue,
-          dates: sampleDates,
-          dailySales: sampleDailySales
+          dates,
+          dailySales
         });
 
         setError(null);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching analytics data:", err);
         setError("Failed to load analytics data");
       } finally {
         setIsLoading(false);
@@ -114,7 +109,6 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
       <div className="row mb-4">
         <div className="col-md-3 mb-3">
           <div className="card h-100 border-0 shadow-sm">

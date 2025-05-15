@@ -3,10 +3,8 @@ const User = require('../models/User');
 require('dotenv').config();
 
 const kitchenAuth = async (req, res, next) => {
-   
 
   const {token} = req.cookies;
-
   if (!token) {
     return res.status(401).json({ message: 'Invalid token, please login!' });
   }
