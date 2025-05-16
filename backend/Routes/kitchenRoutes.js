@@ -4,10 +4,6 @@ const kitchenAuth = require('../middleware/kitchen');
 const OrderItem = require("../models/Order");
 const Table = require("../models/Table");
 kitchenRouter.use(kitchenAuth);
-
-
-
-
 kitchenRouter.get("/allOrders", async (req, res) => {
     try {
     

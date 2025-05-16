@@ -140,7 +140,7 @@ adminRouter.get("/oneWeekComparison", async (req, res) => {
       }
 
       salesData.push({
-        date: dayStart.toISOString().split("T")[0], // Format: YYYY-MM-DD
+        date: dayStart.toISOString().split("T")[0],
         totalSales: dailyTotal
       });
     }
