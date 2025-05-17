@@ -13,6 +13,24 @@
   margin: 0 auto;
 }
 
+.total-row {
+  font-weight: bold;
+  background-color: #f5f5f5;
+}
+
+.total-row td {
+  padding: 12px;
+  border-top: 2px solid #ddd;
+}
+
+.orders-table tfoot {
+  border-top: 2px solid #333;
+}
+
+.order-row td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
 .orders-title {
   color: #333;
   text-align: center;

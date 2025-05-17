@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, ChevronDown, ChevronUp, Clock, CookingPot, Utensils, Trash2 } from 'lucide-react';
 import './kitchen.css';
 import io from 'socket.io-client';
+import axios from 'axios';
 
 const KitchenDashboard = () => {
   const [orders, setOrders] = useState({});
@@ -13,9 +14,6 @@ const KitchenDashboard = () => {
 
   // Redirect if no token cookie exists
 
-
-
-  // Set up socket connection to listen for new orders
   useEffect(() => {
     const socket = io(host);
 
@@ -54,12 +52,11 @@ const KitchenDashboard = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch(`${host}/api/kitchen/allOrders`, {
-          credentials: 'include',
+        const response = await axios.get(`${host}/api/kitchen/allOrders`, {
+          withCredentials: true,
         });
-        const data = await response.json();
-        if (data.success) {
-          setOrders(data.data);
+        if (response.data.success) {
+          setOrders(response.data.data);
         }
       } catch (err) {
         console.error("Error fetching orders:", err);
@@ -78,18 +75,15 @@ const KitchenDashboard = () => {
     }));
   };
 
-
-
   const handleClearTable = async (tableNumber) => {
     const notificationId = Date.now();
 
     try {
-      const response = await fetch(`${host}/api/kitchen/clearTable/${tableNumber}`, {
-        method: 'POST',
-        credentials: 'include',
+      const response = await axios.post(`${host}/api/kitchen/clearTable/${tableNumber}`, {}, {
+        withCredentials: true,
       });
 
-      const data = await response.json();
+      const data = response.data;
       if (data.success) {
         // Update local state to remove the cleared table
         setOrders(prevOrders => {
@@ -154,6 +148,11 @@ const KitchenDashboard = () => {
     }
   };
 
+  // Calculate total amount for a specific table
+  const calculateTableTotal = (tableOrders) => {
+    return tableOrders.reduce((sum, order) => sum + (order.price || 0), 0);
+  };
+
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -174,65 +173,76 @@ const KitchenDashboard = () => {
       </header>
 
       <div className="tables-grid">
-        {Object.keys(orders).sort((a, b) => a - b).map(tableNumber => (
-          <div key={tableNumber} className="table-card">
-            <div
-              className="table-header"
-              onClick={() => toggleTableExpanded(tableNumber)}
-            >
-              <div className="table-info">
-                <span className="table-number">Table {tableNumber}</span>
-                <span className="order-count">
-                  {orders[tableNumber].length} {orders[tableNumber].length === 1 ? 'order' : 'orders'}
-                </span>
+        {Object.keys(orders).sort((a, b) => a - b).map(tableNumber => {
+          const tableTotal = calculateTableTotal(orders[tableNumber]);
+          
+          return (
+            <div key={tableNumber} className="table-card">
+              <div
+                className="table-header"
+                onClick={() => toggleTableExpanded(tableNumber)}
+              >
+                <div className="table-info">
+                  <span className="table-number">Table {tableNumber}</span>
+                  <div className="table-meta">
+                    <span className="order-count">
+                      {orders[tableNumber].length} {orders[tableNumber].length === 1 ? 'order' : 'orders'}
+                    </span>
+                    <span className="table-total">₹{tableTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div className="table-actions">
+                  <button
+                    className="clear-table-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClearTable(tableNumber);
+                    }}
+                    title="Mark Table as Cleared"
+                  >
+                    <Check size={18} style={{ color: 'green' }} />
+                  </button>
+
+                  {expandedTables[tableNumber] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </div>
               </div>
-              <div className="table-actions">
-                <button
-                  className="clear-table-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleClearTable(tableNumber);
-                  }}
-                  title="Mark Table as Cleared"
-                >
-                  <Check size={18} style={{ color: 'green' }} />
-                </button>
 
+              {expandedTables[tableNumber] && (
+                <div className="orders-list">
+                  {orders[tableNumber].length === 0 ? (
+                    <div className="empty-orders">No active orders</div>
+                  ) : (
+                    <>
+                      {orders[tableNumber].map(order => (
+                        <div key={order._id} className="order-item">
+                          <div className="order-header">
+                            <span className="order-time">{formatTime(order.createdAt)}</span>
+                            <div className="order-status">
+                              {getStatusIcon(order.status)}
+                              <span>{order.status}</span>
+                            </div>
+                          </div>
 
-
-                {expandedTables[tableNumber] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
+                          <div className="order-details">
+                            <div className="item-name">
+                              {order.itemName} ({order.portion})
+                            </div>
+                            <div className="item-quantity">×{order.quantity}</div>
+                            <div className="item-price">₹{order.price}</div>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="order-total">
+                        <span>Table Total:</span>
+                        <span>₹{tableTotal.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
-
-            {expandedTables[tableNumber] && (
-              <div className="orders-list">
-                {orders[tableNumber].length === 0 ? (
-                  <div className="empty-orders">No active orders</div>
-                ) : (
-                  orders[tableNumber].map(order => (
-                    <div key={order._id} className="order-item">
-                      <div className="order-header">
-                        <span className="order-time">{formatTime(order.createdAt)}</span>
-                        <div className="order-status">
-                          {getStatusIcon(order.status)}
-                          <span>{order.status}</span>
-                        </div>
-                      </div>
-
-                      <div className="order-details">
-                        <div className="item-name">
-                          {order.itemName} ({order.portion})
-                        </div>
-                        <div className="item-quantity">×{order.quantity}</div>
-                        <div className="item-price">₹{order.price}</div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
