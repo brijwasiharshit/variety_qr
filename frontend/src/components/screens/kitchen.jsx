@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Check, ChevronDown, ChevronUp, Clock, CookingPot, Utensils, Trash2 } from 'lucide-react';
-import './kitchen.css';
-import io from 'socket.io-client';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  CookingPot,
+  Utensils,
+  Trash2,
+} from "lucide-react";
+import "./kitchen.css";
+import io from "socket.io-client";
 
 const KitchenDashboard = () => {
   const [orders, setOrders] = useState({});
@@ -12,51 +19,81 @@ const KitchenDashboard = () => {
   const navigate = useNavigate();
   const host = process.env.REACT_APP_HOST;
 
-  // Redirect if no token cookie exists
+  
+  const playNotificationSound = () => {
+    const audio = new Audio("/notification.mp3");
+    audio.play().catch((e) => console.error("Audio playback error:", e));
+  };
 
+  // 🧠 Socket connection for real-time updates
   useEffect(() => {
     const socket = io(host);
 
-    socket.on('newOrder', (newOrder) => {
-      setOrders((prevOrders) => {
-        const updatedOrders = { ...prevOrders };
-        const tableNo = newOrder.tableNo;
+   // Update the socket.io 'newOrder' event handler
+socket.on("newOrder", (newOrder) => {
+  // Play sound first
+  const audio = new Audio("/notification.mp3");
+  audio.play().catch((e) => console.error("Audio playback error:", e));
 
-        if (!updatedOrders[tableNo]) {
-          updatedOrders[tableNo] = [];
-        }
+  setOrders((prevOrders) => {
+    const updatedOrders = { ...prevOrders };
+    const tableNo = newOrder.tableNo;
 
-        updatedOrders[tableNo].push(newOrder);
-        return updatedOrders;
-      });
+    if (!updatedOrders[tableNo]) {
+      updatedOrders[tableNo] = [];
+    }
 
-      // Show notification with unique ID
-      const notificationId = Date.now();
-      setNotifications((prevNotifications) => [
-        ...prevNotifications,
-        { message: `New order placed at Table ${newOrder.tableNo}`, id: notificationId },
-      ]);
+    updatedOrders[tableNo].push(newOrder);
+    return updatedOrders;
+  });
 
-      // Remove notification after 5 seconds
-      setTimeout(() => {
-        setNotifications((prevNotifications) =>
-          prevNotifications.filter((notif) => notif.id !== notificationId)
-        );
-      }, 5000);
-    });
+  const notificationId = Date.now();
+  setNotifications((prev) => [
+    ...prev,
+    {
+      message: `New order placed at Table ${newOrder.tableNo}`,
+      id: notificationId,
+    },
+  ]);
+
+  // Set timeout to exactly 3 seconds (3000ms)
+  setTimeout(() => {
+    setNotifications((prev) =>
+      prev.filter((notif) => notif.id !== notificationId)
+    );
+  }, 3000); // Changed from 5000 to 3000
+});
+
+// Update all other notification timeouts in the component:
+// In handleClearTable:
+setTimeout(() => {
+  setNotifications((prev) =>
+    prev.filter((notif) => notif.id !== notificationId)
+  );
+}, 3000); // Changed from 5000 to 3000
+
+// In handleDeleteOrder (you'll need to capture the notificationId like in other functions):
+const notificationId = Date.now();
+// ... rest of the code ...
+setTimeout(() => {
+  setNotifications((prev) =>
+    prev.filter((notif) => notif.id !== notificationId)
+  );
+}, 3000); // Changed from 5000 to 3000
 
     return () => socket.disconnect();
   }, [host]);
 
-  // Fetch orders
+  // 📦 Fetch all orders
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get(`${host}/api/kitchen/allOrders`, {
-          withCredentials: true,
+        const response = await fetch(`${host}/api/kitchen/allOrders`, {
+          credentials: "include",
         });
-        if (response.data.success) {
-          setOrders(response.data.data);
+        const data = await response.json();
+        if (data.success) {
+          setOrders(data.data);
         }
       } catch (err) {
         console.error("Error fetching orders:", err);
@@ -69,9 +106,9 @@ const KitchenDashboard = () => {
   }, [host]);
 
   const toggleTableExpanded = (tableNumber) => {
-    setExpandedTables(prev => ({
+    setExpandedTables((prev) => ({
       ...prev,
-      [tableNumber]: !prev[tableNumber]
+      [tableNumber]: !prev[tableNumber],
     }));
   };
 
@@ -79,90 +116,113 @@ const KitchenDashboard = () => {
     const notificationId = Date.now();
 
     try {
-      const response = await axios.post(`${host}/api/kitchen/clearTable/${tableNumber}`, {}, {
-        withCredentials: true,
-      });
+      const response = await fetch(
+        `${host}/api/kitchen/clearTable/${tableNumber}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
 
-      const data = response.data;
+      const data = await response.json();
       if (data.success) {
-        // Update local state to remove the cleared table
-        setOrders(prevOrders => {
+        setOrders((prevOrders) => {
           const newOrders = { ...prevOrders };
           delete newOrders[tableNumber];
           return newOrders;
         });
 
-        // Show success notification
-        setNotifications((prevNotifications) => [
-          ...prevNotifications,
+        setNotifications((prev) => [
+          ...prev,
           {
             message: `Great done! Table ${tableNumber} cleared successfully`,
             id: notificationId,
-            type: 'success'
+            type: "success",
           },
         ]);
       } else {
-        // Show error notification
-        setNotifications((prevNotifications) => [
-          ...prevNotifications,
+        setNotifications((prev) => [
+          ...prev,
           {
             message: `Failed to clear Table ${tableNumber}: ${data.error}`,
             id: notificationId,
-            type: 'error'
+            type: "error",
           },
         ]);
       }
     } catch (err) {
       console.error("Error clearing table:", err);
-      // Show error notification
-      setNotifications((prevNotifications) => [
-        ...prevNotifications,
+      setNotifications((prev) => [
+        ...prev,
         {
           message: `Error clearing Table ${tableNumber}`,
           id: notificationId,
-          type: 'error'
+          type: "error",
         },
       ]);
     }
 
-    // Remove notification after 5 seconds
     setTimeout(() => {
-      setNotifications((prevNotifications) =>
-        prevNotifications.filter((notif) => notif.id !== notificationId)
+      setNotifications((prev) =>
+        prev.filter((notif) => notif.id !== notificationId)
       );
     }, 5000);
   };
 
+ const handleDeleteOrder = async (tableNo, orderId) => {
+  try {
+    const response = await fetch(
+      `${host}/api/kitchen/cancelOrder/${tableNo}/${orderId}`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
+    const data = await response.json();
+    if (data.success) {
+      setOrders((prevOrders) => {
+        const updatedOrders = { ...prevOrders };
+        updatedOrders[tableNo] = updatedOrders[tableNo].filter(
+          (order) => order._id !== orderId
+        );
+        return updatedOrders;
+      });
+      // Removed success notification
+    }
+    // Removed error notifications
+  } catch (err) {
+    console.error("Delete order error:", err);
+    // Removed catch notification
+  }
+};
+
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'created':
+      case "created":
         return <Clock size={16} className="text-yellow-500" />;
-      case 'preparing':
+      case "preparing":
         return <CookingPot size={16} className="text-orange-500" />;
-      case 'ready':
+      case "ready":
         return <Check size={16} className="text-green-500" />;
-      case 'served':
+      case "served":
         return <Utensils size={16} className="text-blue-500" />;
       default:
         return <Clock size={16} />;
     }
   };
 
-  // Calculate total amount for a specific table
-  const calculateTableTotal = (tableOrders) => {
-    return tableOrders.reduce((sum, order) => sum + (order.price || 0), 0);
-  };
-
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
     <div className="kitchen-container">
-      {/* Notification System */}
       <div className="notifications">
         {notifications.map((notif) => (
-          <div key={notif.id} className={`notification ${notif.type || ''}`}>
+          <div key={notif.id} className={`notification ${notif.type || ""}`}>
             <span>{notif.message}</span>
           </div>
         ))}
@@ -173,10 +233,9 @@ const KitchenDashboard = () => {
       </header>
 
       <div className="tables-grid">
-        {Object.keys(orders).sort((a, b) => a - b).map(tableNumber => {
-          const tableTotal = calculateTableTotal(orders[tableNumber]);
-          
-          return (
+        {Object.keys(orders)
+          .sort((a, b) => a - b)
+          .map((tableNumber) => (
             <div key={tableNumber} className="table-card">
               <div
                 className="table-header"
@@ -184,12 +243,10 @@ const KitchenDashboard = () => {
               >
                 <div className="table-info">
                   <span className="table-number">Table {tableNumber}</span>
-                  <div className="table-meta">
-                    <span className="order-count">
-                      {orders[tableNumber].length} {orders[tableNumber].length === 1 ? 'order' : 'orders'}
-                    </span>
-                    <span className="table-total">₹{tableTotal.toFixed(2)}</span>
-                  </div>
+                  <span className="order-count">
+                    {orders[tableNumber].length}{" "}
+                    {orders[tableNumber].length === 1 ? "order" : "orders"}
+                  </span>
                 </div>
                 <div className="table-actions">
                   <button
@@ -200,10 +257,13 @@ const KitchenDashboard = () => {
                     }}
                     title="Mark Table as Cleared"
                   >
-                    <Check size={18} style={{ color: 'green' }} />
+                    <Check size={18} style={{ color: "green" }} />
                   </button>
-
-                  {expandedTables[tableNumber] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  {expandedTables[tableNumber] ? (
+                    <ChevronUp size={20} />
+                  ) : (
+                    <ChevronDown size={20} />
+                  )}
                 </div>
               </div>
 
@@ -212,37 +272,43 @@ const KitchenDashboard = () => {
                   {orders[tableNumber].length === 0 ? (
                     <div className="empty-orders">No active orders</div>
                   ) : (
-                    <>
-                      {orders[tableNumber].map(order => (
-                        <div key={order._id} className="order-item">
-                          <div className="order-header">
-                            <span className="order-time">{formatTime(order.createdAt)}</span>
-                            <div className="order-status">
-                              {getStatusIcon(order.status)}
-                              <span>{order.status}</span>
-                            </div>
-                          </div>
-
-                          <div className="order-details">
-                            <div className="item-name">
-                              {order.itemName} ({order.portion})
-                            </div>
-                            <div className="item-quantity">×{order.quantity}</div>
-                            <div className="item-price">₹{order.price}</div>
+                    orders[tableNumber].map((order) => (
+                      <div key={order._id} className="order-item">
+                        <div className="order-header">
+                          <span className="order-time">
+                            {formatTime(order.createdAt)}
+                          </span>
+                          <div className="order-status">
+                            {getStatusIcon(order.status)}
+                            <span>{order.status}</span>
                           </div>
                         </div>
-                      ))}
-                      <div className="order-total">
-                        <span>Table Total:</span>
-                        <span>₹{tableTotal.toFixed(2)}</span>
+                        <div className="order-details">
+                          <div className="item-name">
+                            {order.itemName} ({order.portion})
+                          </div>
+                          <div className="item-quantity">×{order.quantity}</div>
+                          <div className="item-price">₹{order.price}</div>
+                        </div>
+
+                        <div className="order-actions">
+                          <button
+                            className="delete-order-btn"
+                            onClick={() =>
+                              handleDeleteOrder(tableNumber, order._id)
+                            }
+                            title="Delete Order"
+                          >
+                            <Trash2 size={16} color="red" />
+                          </button>
+                        </div>
                       </div>
-                    </>
+                    ))
                   )}
                 </div>
               )}
             </div>
-          );
-        })}
+          ))}
       </div>
     </div>
   );

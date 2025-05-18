@@ -42,9 +42,34 @@ kitchenRouter.get("/allOrders", async (req, res) => {
       });
     }
   });
-kitchenRouter.post("/cancelOrder/:tableId/:orderId",(req,res) => {
-// deletes the selected order from the table
-})
+kitchenRouter.post("/cancelOrder/:tableId/:orderId", async (req, res) => {
+  const { tableId, orderId } = req.params;
+
+  try {
+    const result = await OrderItem.deleteOne({
+      _id: orderId,
+      tableNo: tableId,
+      status: "created", 
+    });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found or cannot be deleted",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Order successfully deleted",
+    });
+  } catch (err) {
+    console.error("Error deleting order:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete order",
+      details: err.message,
+    });
+  }
+});
 kitchenRouter.post("/sendBill",(req,res) => {
     // const {number} = req.body;
     //sends the bill by twilio to the number
@@ -96,6 +121,7 @@ kitchenRouter.get('/tableOrders/:tableId', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 
 module.exports = kitchenRouter;
