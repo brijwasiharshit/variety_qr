@@ -203,11 +203,7 @@ adminRouter.post("/addfooditem", async(req, res) => {
     try {
    
         const { name, description, options, category, imageUrl } = req.body;
-      console.log(name);
-      console.log(description);
-      console.log(options);
-      console.log(category);
-      console.log(imageUrl);
+ 
         // Validate required fields
         if (!name || !options || !category) {
             return res.status(400).json({

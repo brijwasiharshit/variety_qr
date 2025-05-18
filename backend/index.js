@@ -55,7 +55,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-// 🚀 Connect DB and Start Server
+
 const port = process.env.PORT || 5000;
 connectDb()
   .then(() => {

@@ -5,8 +5,7 @@ require('dotenv').config();
 const kitchenAuth = async (req, res, next) => {
 
   const {token,role} = req.cookies;
-  console.log("token", token);
-  console.log("role", role);
+
   if (!token) {
     return res.status(401).json({ message: 'Invalid token, please login!' });
   }
