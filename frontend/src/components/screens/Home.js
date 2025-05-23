@@ -332,7 +332,8 @@ export default function Home() {
                     <Carousel setSearchQuery={setSearchQuery} searchQuery={searchQuery} />
                     
                     {/* Category Tabs */}
-                <div className="category-tabs-container">
+                {/* Category Tabs */}
+<div className="category-tabs-container">
   <div className="category-tabs">
     {foodCat.map(category => (
       <button
@@ -347,16 +348,16 @@ export default function Home() {
 </div>
 
                     
-                  <div className="menu-container bg-gray-50 px-2 sm:px-4 md:px-6 py-4 rounded-lg">
+                  <div className="menu-container bg-gradient-to-br from-[#fff8dc] to-[#ffeb99] px-2 sm:px-4 md:px-6 py-4 rounded-lg">
   {foodCat
     .filter(category => category._id === activeCategory)
     .map(category => (
       <div key={category._id} className="category-section mb-8">
         <div className="category-header mb-4 sm:mb-6">
-          <h2 className="category-title text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+          <h2 className="category-title text-2xl sm:text-3xl font-bold text-[#333] mb-1 sm:mb-2 border-b-2 border-[#ff6b6b] pb-2">
             {category.name}
           </h2>
-          <p className="category-description text-sm sm:text-base text-gray-600">
+          <p className="category-description text-sm sm:text-base text-[#666]">
             {category.description}
           </p>
         </div>
@@ -365,7 +366,7 @@ export default function Home() {
           {filteredByCategory
             .filter(item => item.category === category._id)
             .map(item => (
-              <div key={item._id} className="food-item-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div key={item._id} className="food-item-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 hover:transform hover:-translate-y-1">
                 <img 
                   src={item.imageUrl} 
                   alt={item.name} 
@@ -373,19 +374,19 @@ export default function Home() {
                 />
                 
                 <div className="food-item-details p-3 sm:p-4">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3">
+                  <h3 className="text-lg sm:text-xl font-semibold text-[#333] mb-2 sm:mb-3">
                     {item.name}
                   </h3>
                   
                   <div className="price-options space-y-1 sm:space-y-2">
                     {Object.entries(item.options).map(([option, price]) => (
                       <div key={option} className="price-option flex justify-between items-center py-1 sm:py-2 border-b border-gray-100 last:border-0">
-                        <span className="text-sm sm:text-base text-gray-700">
-                          {option}: <span className="font-medium text-indigo-600">₹{price}</span>
+                        <span className="text-sm sm:text-base text-[#666]">
+                          {option}: <span className="font-medium text-[#ff6b6b]">₹{price}</span>
                         </span>
                         <button 
                           onClick={() => addToCart(item, option, price)}
-                          className="add-to-cart-btn bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 sm:px-3 rounded text-xs sm:text-sm transition-colors duration-200"
+                          className="add-to-cart-btn bg-[#ff6b6b] hover:bg-[#ff5252] text-white px-2 py-1 sm:px-3 rounded text-xs sm:text-sm transition-colors duration-200"
                         >
                           Add +
                         </button>
