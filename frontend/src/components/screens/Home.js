@@ -30,7 +30,6 @@ const ThankYouPopup = ({ onClose, tableId }) => {
           </div>
         </div>
         
-        {/* Add View Orders Button */}
         <button 
           className="view-orders-btn"
           onClick={() => {
@@ -66,20 +65,18 @@ export default function Home() {
     const [showCart, setShowCart] = useState(false);
     const [showThankYou, setShowThankYou] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: "" });
+    const [activeCategory, setActiveCategory] = useState(null);
     const cartRef = useRef(null);
 
-    // Calculate subtotal from cart items
     const calculateSubtotal = () => {
         return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
     };
 
-    // Calculate total with tax (5%)
     const calculateTotal = () => {
         const subtotal = calculateSubtotal();
-        return subtotal ;
+        return subtotal;
     };
 
-    // Show notification
     const showNotification = (message) => {
         setNotification({ show: true, message });
         setTimeout(() => {
@@ -87,7 +84,6 @@ export default function Home() {
         }, 3000);
     };
 
-    // Function to save individual item image
     const saveImageToGallery = (imageUrl, itemName) => {
         try {
             const link = document.createElement('a');
@@ -103,7 +99,6 @@ export default function Home() {
         }
     };
 
-    // Improved function to save receipt
     const saveReceiptToGallery = async () => {
         try {
             if (!cartRef.current) {
@@ -111,7 +106,6 @@ export default function Home() {
                 return;
             }
 
-            // Hide buttons before capturing
             const buttons = cartRef.current.querySelectorAll('button');
             buttons.forEach(btn => btn.style.visibility = 'hidden');
 
@@ -123,10 +117,8 @@ export default function Home() {
                 scrollY: -window.scrollY
             });
 
-            // Restore buttons visibility
             buttons.forEach(btn => btn.style.visibility = 'visible');
 
-            // Different handling for mobile vs desktop
             if (isMobileDevice()) {
                 await handleMobileSave(canvas);
             } else {
@@ -148,11 +140,9 @@ export default function Home() {
         const image = canvas.toDataURL('image/png');
         
         if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            // iOS - open image in new tab
             const newWindow = window.open();
             newWindow.document.write(`<img src="${image}" />`);
         } else {
-            // Android - download image
             const link = document.createElement('a');
             link.href = image;
             link.download = `Receipt_Table_${tableId}_${new Date().toISOString().slice(0,10)}.png`;
@@ -164,7 +154,6 @@ export default function Home() {
 
     const handleDesktopSave = async (canvas) => {
         try {
-            // Try to copy to clipboard first
             if (navigator.clipboard && navigator.clipboard.write) {
                 const blob = await new Promise(resolve => canvas.toBlob(resolve));
                 await navigator.clipboard.write([
@@ -176,7 +165,6 @@ export default function Home() {
             }
         } catch (err) {
             console.log('Falling back to download:', err);
-            // Fallback to download
             const link = document.createElement('a');
             link.href = canvas.toDataURL('image/png');
             link.download = `Receipt_Table_${tableId}_${new Date().toISOString().slice(0,10)}.png`;
@@ -186,7 +174,6 @@ export default function Home() {
         }
     };
 
-    // Add item to cart
     const addToCart = (item, option, price) => {
         const existingItem = cart.find(cartItem => 
             cartItem._id === item._id && cartItem.option === option
@@ -210,7 +197,6 @@ export default function Home() {
         }
     };
 
-    // Remove item from cart
     const removeFromCart = (itemId, option) => {
         setCart(cart.filter(item => 
             !(item._id === itemId && item.option === option)
@@ -218,7 +204,6 @@ export default function Home() {
         showNotification('Item removed from cart');
     };
 
-    // Update item quantity
     const updateQuantity = (itemId, option, newQuantity) => {
         if (newQuantity < 1) {
             removeFromCart(itemId, option);
@@ -232,7 +217,6 @@ export default function Home() {
         ));
     };
 
-    // Handle checkout - Updated to show popup
     const handleCheckout = async () => {
         try {
             const promises = cart.map((item) =>
@@ -248,10 +232,7 @@ export default function Home() {
             const results = await Promise.all(promises);
             console.log("All orders placed successfully:", results);
             
-            // Show thank you popup
             setShowThankYou(true);
-            
-            // Clear cart
             setCart([]);
             setShowCart(false);
         } catch (error) {
@@ -260,15 +241,17 @@ export default function Home() {
         }
     };
 
-    // Scroll to top
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    // Filter food items based on search query
     const filteredItems = foodItems.filter(item => 
         item?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const filteredByCategory = activeCategory 
+        ? filteredItems.filter(item => item.category === activeCategory)
+        : filteredItems;
 
     useEffect(() => {
         const loadData = async () => {
@@ -290,6 +273,10 @@ export default function Home() {
                 setFoodCat(data.foodCategories);
                 setFoodItems(data.foodItems);
                 
+                // Set the first category as active by default
+                if (data.foodCategories.length > 0) {
+                    setActiveCategory(data.foodCategories[0]._id);
+                }
             } catch (err) {
                 console.error("Failed to fetch data:", err.message);
                 setError(err.message);
@@ -312,24 +299,21 @@ export default function Home() {
 
     return (
         <div style={{ backgroundColor: "#fffacd", minHeight: "100vh", paddingBottom: "20px" }}>
-            {/* Notification Popup */}
             {notification.show && (
                 <div className="notification-popup">
                     {notification.message}
                 </div>
             )}
 
-    
-{showThankYou && (
-  <ThankYouPopup 
-    onClose={() => setShowThankYou(false)} 
-    tableId={tableId} 
-  />
-)}
+            {showThankYou && (
+                <ThankYouPopup 
+                    onClose={() => setShowThankYou(false)} 
+                    tableId={tableId} 
+                />
+            )}
 
             {!isLoaded ? (
                 <div className="loading-container">
-                   
                     <div className="loading-spinner"></div>
                 </div>
             ) : error ? (
@@ -347,46 +331,74 @@ export default function Home() {
                 <>
                     <Carousel setSearchQuery={setSearchQuery} searchQuery={searchQuery} />
                     
-                    <div className="menu-container">
-                        {foodCat.map(category => (
-                            <div key={category._id} className="category-section">
-                                <h2 className="category-title">{category.name}</h2>
-                                <p className="category-description">{category.description}</p>
-                                <div className="food-items-grid">
-                                    {filteredItems
-                                        .filter(item => item.category === category._id)
-                                        .map(item => (
-                                            <div key={item._id} className="food-item-card">
-                                                <img 
-                                                    src={item.imageUrl} 
-                                                    alt={item.name} 
-                                                    className="food-item-image"
-                                                />
-                                                <div className="food-item-details">
-                                                    <h3>{item.name}</h3>
-                                                    <p>{item.description}</p>
-                                                    <div className="price-options">
-                                                        {Object.entries(item.options).map(([option, price]) => (
-                                                            <div key={option} className="price-option">
-                                                                <span>{option}: ₹{price}</span>
-                                                                <div className="quantity-controls">
-                                                                    <button 
-                                                                        onClick={() => addToCart(item, option, price)}
-                                                                        className="add-to-cart-btn"
-                                                                    >
-                                                                        Add
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    {/* Category Tabs */}
+                <div className="category-tabs-container">
+  <div className="category-tabs">
+    {foodCat.map(category => (
+      <button
+        key={category._id}
+        className={`category-tab ${activeCategory === category._id ? 'active' : ''}`}
+        onClick={() => setActiveCategory(category._id)}
+      >
+        {category.name}
+      </button>
+    ))}
+  </div>
+</div>
+
+                    
+                  <div className="menu-container bg-gray-50 px-2 sm:px-4 md:px-6 py-4 rounded-lg">
+  {foodCat
+    .filter(category => category._id === activeCategory)
+    .map(category => (
+      <div key={category._id} className="category-section mb-8">
+        <div className="category-header mb-4 sm:mb-6">
+          <h2 className="category-title text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">
+            {category.name}
+          </h2>
+          <p className="category-description text-sm sm:text-base text-gray-600">
+            {category.description}
+          </p>
+        </div>
+        
+        <div className="food-items-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          {filteredByCategory
+            .filter(item => item.category === category._id)
+            .map(item => (
+              <div key={item._id} className="food-item-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+                <img 
+                  src={item.imageUrl} 
+                  alt={item.name} 
+                  className="food-item-image w-full h-40 sm:h-48 object-cover"
+                />
+                
+                <div className="food-item-details p-3 sm:p-4">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 sm:mb-3">
+                    {item.name}
+                  </h3>
+                  
+                  <div className="price-options space-y-1 sm:space-y-2">
+                    {Object.entries(item.options).map(([option, price]) => (
+                      <div key={option} className="price-option flex justify-between items-center py-1 sm:py-2 border-b border-gray-100 last:border-0">
+                        <span className="text-sm sm:text-base text-gray-700">
+                          {option}: <span className="font-medium text-indigo-600">₹{price}</span>
+                        </span>
+                        <button 
+                          onClick={() => addToCart(item, option, price)}
+                          className="add-to-cart-btn bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 sm:px-3 rounded text-xs sm:text-sm transition-colors duration-200"
+                        >
+                          Add +
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+    ))}
+</div>
 
                     {/* Cart Button */}
                     <button 
@@ -429,76 +441,62 @@ export default function Home() {
                                         </div>
                                     ) : (
                                         <>
-                                         <div 
-  className="modern-cart-items"
-  style={{ backgroundColor: '#f0fff4', padding: '1rem', borderRadius: '8px' }}
->
-  {cart.map((item, index) => (
-    <div 
-      key={`${item._id}-${item.option}-${index}`} 
-      className="modern-cart-item"
-      style={{ 
-        backgroundColor: '#ffffff',
-        border: '1px solid #c6f6d5',
-        borderRadius: '8px',
-        padding: '0.75rem',
-        marginBottom: '1rem',
-        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)'
-      }}
-    >
-      <div className="cart-item-details">
-        <div className="item-meta">
-          <h4 className="item-name">{item.name}</h4>
-          <span className="item-option">{item.option}</span>
-          <div className="item-pricing">
-            <span className="item-price">₹{item.price}</span>
-            <span className="item-multiply">×</span>
-            <span className="item-quantity">{item.quantity}</span>
-            <span className="item-subtotal">₹{(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        </div>
-        
-        <div className="item-actions">
-          <div className="quantity-controls">
-            <button
-              onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
-              className="quantity-btn minus"
-              disabled={item.quantity <= 1}
-              aria-label="Decrease quantity"
-            >
-              −
-            </button>
-            <span className="quantity-display">{item.quantity}</span>
-            <button
-              onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
-              className="quantity-btn plus"
-              aria-label="Increase quantity"
-            >
-              +
-            </button>
-          </div>
-          
-          <button
-            onClick={() => removeFromCart(item._id, item.option)}
-            className="delete-btn"
-            aria-label="Remove item"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
+                                            <div className="modern-cart-items">
+                                                {cart.map((item, index) => (
+                                                    <div key={`${item._id}-${item.option}-${index}`} className="modern-cart-item">
+                                                        <div className="cart-item-details">
+                                                            <div className="item-meta">
+                                                                <h4 className="item-name">{item.name}</h4>
+                                                                <span className="item-option">{item.option}</span>
+                                                                <div className="item-pricing">
+                                                                    <span className="item-price">₹{item.price}</span>
+                                                                    <span className="item-multiply">×</span>
+                                                                    <span className="item-quantity">{item.quantity}</span>
+                                                                    <span className="item-subtotal">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className="item-actions">
+                                                                <div className="quantity-controls">
+                                                                    <button
+                                                                        onClick={() => updateQuantity(item._id, item.option, item.quantity - 1)}
+                                                                        className="quantity-btn minus"
+                                                                        disabled={item.quantity <= 1}
+                                                                        aria-label="Decrease quantity"
+                                                                    >
+                                                                        −
+                                                                    </button>
+                                                                    <span className="quantity-display">{item.quantity}</span>
+                                                                    <button
+                                                                        onClick={() => updateQuantity(item._id, item.option, item.quantity + 1)}
+                                                                        className="quantity-btn plus"
+                                                                        aria-label="Increase quantity"
+                                                                    >
+                                                                        +
+                                                                    </button>
+                                                                </div>
+                                                                
+                                                                <button
+                                                                    onClick={() => removeFromCart(item._id, item.option)}
+                                                                    className="delete-btn"
+                                                                    aria-label="Remove item"
+                                                                >
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                             
                                             <div className="modern-cart-summary">
                                                 <div className="summary-row">
                                                     <span>Subtotal</span>
                                                     <span>₹{calculateSubtotal().toFixed(2)}</span>
                                                 </div>
-                                             
+                                                
                                                 <div className="summary-row total">
                                                     <span>Total</span>
                                                     <span>₹{calculateTotal().toFixed(2)}</span>

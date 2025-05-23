@@ -227,12 +227,7 @@ const Front = () => {
       <div className={classes.decorativeElement} />
       
       <div className={classes.content}>
-        <h1 className={classes.title}>Welcome to Variety</h1>
-        <p className={classes.subtitle}>
-          Select your table to begin an exquisite dining experience
-          <br />
-          where every detail is crafted for your pleasure
-        </p>
+        
         
         <div className={classes.buttonGrid}>
           {tables.map((table) => (
